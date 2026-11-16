@@ -1,59 +1,101 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kayıt Ol</title>
-    <link rel="stylesheet" href="../style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kayıt Ol - XForum</title>
+  <link rel="stylesheet" href="../style.css">
 </head>
 <body>
-    <div class="auth-container">
-        <div class="box">
-            <h2 style="margin-bottom: 1rem;">Kayıt Ol</h2>
-            <div id="errorMsg" class="error-msg"></div>
-            <input type="text" id="username" placeholder="Kullanıcı adınız (sadece harf/rakam)">
-            <input type="password" id="password" placeholder="Şifreniz (en az 6 karakter)">
-            <button id="registerBtn" style="width: 100%; margin-bottom: 1rem;">Hesap Oluştur</button>
-            <div style="display: flex; justify-content: space-between;">
-                <a href="../login/" class="link-text">Zaten hesabım var</a>
-                <a href="../" class="link-text">Ana Sayfa</a>
-            </div>
+
+  <header>
+    <a href="../" class="logo">XForum</a>
+    <a href="../" class="btn btn-secondary">Ana Sayfa</a>
+  </header>
+
+  <div class="container" style="max-width:420px; margin-top:40px;">
+    <div class="card">
+      <h2 style="margin-bottom:18px; text-align:center;">Hesap Oluştur</h2>
+      <div id="errorBox" class="error-msg hidden"></div>
+
+      <form id="registerForm">
+        <div class="form-group">
+          <label>Kullanıcı Adı (Harf, rakam, _ , - , .)</label>
+          <input type="text" id="username" placeholder="orn: kadir_dev.01" required minlength="3" maxlength="25">
         </div>
+
+        <div class="form-group">
+          <label>Şifre (En az 8 karakter)</label>
+          <div class="password-wrapper">
+            <input type="password" id="password" placeholder="En az 8 karakter" required minlength="8">
+            <button type="button" class="toggle-pw" id="togglePw">Göster</button>
+          </div>
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn btn-primary" style="width:100%;">Kayıt Ol</button>
+      </form>
+
+      <div style="margin-top:16px; text-align:center; font-size:0.9rem; color:#8b949e;">
+        Zaten hesabın var mı? <a href="../login/" style="color:#58a6ff; text-decoration:none;">Giriş Yap</a>
+      </div>
     </div>
+  </div>
 
-    <script type="module">
-        import { auth } from '../firebase-config.js';
-        import { createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  <script type="module">
+    import { auth } from "../firebase-config.js";
+    import { createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-        document.getElementById('registerBtn').addEventListener('click', async () => {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            const errorMsg = document.getElementById('errorMsg');
-            errorMsg.innerText = '';
+    // Şifre göster/gizle
+    const pwInput = document.getElementById("password");
+    const toggleBtn = document.getElementById("togglePw");
+    toggleBtn.addEventListener("click", () => {
+      const isPassword = pwInput.type === "password";
+      pwInput.type = isPassword ? "text" : "password";
+      toggleBtn.innerText = isPassword ? "Gizle" : "Göster";
+    });
 
-            if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
-                errorMsg.innerText = 'Kullanıcı adı 3-20 karakter olmalı ve sadece harf, rakam veya _ içermelidir.';
-                return;
-            }
-            if (password.length < 6) {
-                errorMsg.innerText = 'Şifre en az 6 karakter olmalıdır.';
-                return;
-            }
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errorBox = document.getElementById("errorBox");
+      errorBox.classList.add("hidden");
 
-            try {
-                // Kullanıcı adını arka planda sanal e-posta formatına çeviriyoruz
-                const fakeEmail = `${username.toLowerCase()}@xforum.local`;
-                const userCredential = await createUserWithEmailAndPassword(auth, fakeEmail, password);
-                await updateProfile(userCredential.user, { displayName: username });
-                window.location.href = '../';
-            } catch (error) {
-                if (error.code === 'auth/email-already-in-use') {
-                    errorMsg.innerText = 'Bu kullanıcı adı zaten alınmış.';
-                } else {
-                    errorMsg.innerText = 'Hata: ' + error.message;
-                }
-            }
-        });
-    </script>
+      const username = document.getElementById("username").value.trim();
+      const password = pwInput.value;
+
+      // Kullanıcı adı kontrolü: sadece harf, rakam, _, -, .
+      const validUsername = /^[a-zA-Z0-9._-]+$/;
+      if (!validUsername.test(username)) {
+        errorBox.innerText = "Kullanıcı adı sadece harf, rakam ve (_, -, .) karakterlerini içerebilir.";
+        errorBox.classList.remove("hidden");
+        return;
+      }
+
+      if (password.length < 8) {
+        errorBox.innerText = "Şifreniz en az 8 karakter olmalıdır.";
+        errorBox.classList.remove("hidden");
+        return;
+      }
+
+      const submitBtn = document.getElementById("submitBtn");
+      submitBtn.disabled = true;
+      submitBtn.innerText = "Kaydediliyor...";
+
+      try {
+        const fakeEmail = username.toLowerCase() + "@xforum.local";
+        const userCred = await createUserWithEmailAndPassword(auth, fakeEmail, password);
+        await updateProfile(userCred.user, { displayName: username });
+        window.location.href = "../";
+      } catch (err) {
+        if (err.code === "auth/email-already-in-use") {
+          errorBox.innerText = "Bu kullanıcı adı zaten alınmış.";
+        } else {
+          errorBox.innerText = "Kayıt hatası: " + err.message;
+        }
+        errorBox.classList.remove("hidden");
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Kayıt Ol";
+      }
+    });
+  </script>
 </body>
 </html>
