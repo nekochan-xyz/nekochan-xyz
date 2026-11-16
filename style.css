@@ -1,117 +1,158 @@
+/* Genel Ayarlar & Reset */
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
+
 body {
-    background-color: #0d1117;
-    color: #c9d1d9;
-    line-height: 1.6;
+  background-color: #0d1117;
+  color: #c9d1d9;
+  line-height: 1.5;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
 }
-header {
-    background-color: #161b22;
-    border-bottom: 1px solid #30363d;
-    padding: 1rem 1.5rem;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 10px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
+
+/* Konteyner ve Kart Yapısı */
+.container, .card, form {
+  width: 100%;
+  max-width: 600px;
+  background-color: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
-.container {
-    max-width: 800px;
-    margin: 2rem auto;
-    padding: 0 1rem;
+
+/* Üst Bilgi / Navbar */
+header, .navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: 20px;
+  padding: 12px 20px;
+  background-color: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
 }
-.auth-container {
-    max-width: 420px;
-    margin: 4rem auto;
-    padding: 0 1rem;
+
+header span, .navbar span {
+  font-weight: 600;
+  color: #58a6ff;
 }
-.box {
-    background-color: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
+
+/* Başlıklar */
+h1, h2, h3 {
+  color: #f0f6fc;
+  margin-bottom: 16px;
+  font-size: 1.25rem;
 }
-input, textarea {
-    width: 100%;
-    background-color: #0d1117;
-    border: 1px solid #30363d;
-    color: #c9d1d9;
-    padding: 0.75rem;
-    border-radius: 6px;
-    margin-bottom: 0.85rem;
-    font-size: 0.95rem;
+
+/* Form Elemanları */
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.875rem;
+  color: #8b949e;
 }
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  background-color: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #f0f6fc;
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
 input:focus, textarea:focus {
-    outline: none;
-    border-color: #58a6ff;
+  outline: none;
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.3);
 }
+
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Butonlar */
 button, .btn {
-    background-color: #238636;
-    color: #ffffff;
-    border: none;
-    padding: 0.6rem 1.1rem;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 0.9rem;
-    text-decoration: none;
-    display: inline-block;
-    text-align: center;
+  display: inline-block;
+  background-color: #238636;
+  color: #ffffff;
+  padding: 10px 16px;
+  border: 1px solid rgba(27, 31, 35, 0.15);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.2s;
+  width: 100%;
 }
+
 button:hover, .btn:hover {
-    background-color: #2ea043;
+  background-color: #2ea043;
 }
-.btn-secondary {
-    background-color: #21262d;
-    border: 1px solid #30363d;
-    color: #c9d1d9;
+
+/* İkincil / Çıkış Butonu */
+button.danger, .btn-danger {
+  background-color: #da3633;
+  width: auto;
+  padding: 6px 12px;
+  font-size: 0.85rem;
 }
-.btn-secondary:hover {
-    background-color: #30363d;
+
+button.danger:hover, .btn-danger:hover {
+  background-color: #f85149;
 }
-.btn-danger {
-    background-color: #da3633;
+
+/* Konu Listesi ve Kartları */
+.topic-item {
+  background-color: #21262d;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 14px;
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
 }
-.btn-danger:hover {
-    background-color: #f85149;
+
+.topic-item:hover {
+  border-color: #8b949e;
 }
-.post-card {
-    background-color: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 8px;
-    padding: 1.2rem;
-    margin-bottom: 1rem;
+
+.topic-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #58a6ff;
+  margin-bottom: 6px;
+  text-decoration: none;
+  display: block;
 }
-.post-title {
-    color: #58a6ff;
-    font-size: 1.2rem;
-    margin-bottom: 0.4rem;
+
+.topic-meta {
+  font-size: 0.8rem;
+  color: #8b949e;
 }
-.post-meta {
-    font-size: 0.8rem;
-    color: #8b949e;
-    margin-bottom: 0.75rem;
-}
-.hidden {
-    display: none !important;
-}
-.error-msg {
-    color: #f85149;
-    font-size: 0.85rem;
-    margin-bottom: 0.85rem;
-}
-.link-text {
-    color: #58a6ff;
-    text-decoration: none;
-    font-size: 0.9rem;
-}
-.link-text:hover {
-    text-decoration: underline;
+
+/* Yükleniyor / Durum Mesajları */
+.loading {
+  text-align: center;
+  color: #8b949e;
+  font-style: italic;
+  padding: 20px;
 }
