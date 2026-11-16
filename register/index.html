@@ -1,1 +1,68 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kayıt Ol</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 300px; }
+        h2 { text-align: center; color: #333; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #45a049; }
+        .error { color: red; font-size: 14px; text-align: center; }
+        .link { text-align: center; margin-top: 15px; font-size: 14px; }
+        .link a { color: #007BFF; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Kayıt Ol</h2>
+        <form id="registerForm">
+            <input type="email" id="email" placeholder="E-posta Adresi" required>
+            <input type="password" id="password" placeholder="Şifre (En az 6 karakter)" required>
+            <button type="submit">Kayıt Ol</button>
+            <p id="errorMsg" class="error"></p>
+        </form>
+        <div class="link">
+            Zaten hesabın var mı? <a href="../login/index.html">Giriş Yap</a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth, db } from '../firebase-config.js';
+        import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
+        import { doc, setDoc } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
+
+        const registerForm = document.getElementById('registerForm');
+        const errorMsg = document.getElementById('errorMsg');
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            errorMsg.textContent = "";
+
+            try {
+                // Firebase Auth ile kullanıcı oluştur
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Firestore veritabanına kullanıcı verisini kaydet
+                await setDoc(doc(db, "users", user.uid), {
+                    email: email,
+                    createdAt: new Date().toISOString()
+                });
+
+                alert("Kayıt başarılı! Giriş sayfasına yönlendiriliyorsunuz.");
+                window.location.href = "../login/index.html";
+            } catch (error) {
+                errorMsg.textContent = "Hata: " + error.message;
+            }
+        });
+    </script>
+</body>
+</html>
 
