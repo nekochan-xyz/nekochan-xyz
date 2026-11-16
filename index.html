@@ -45,11 +45,11 @@
         </section>
     </div>
 
-    <!-- Firebase ve Uygulama Mantığı -->
+    <!-- Firebase ve Uygulama Mantığı (10.12.2 Uyumlu) -->
     <script type="module">
         import { auth, db } from './firebase-config.js';
-        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
-        import { collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         window.logout = async () => {
             try {
@@ -129,7 +129,7 @@
                 });
             } catch (error) {
                 console.error("Konular yüklenemedi:", error);
-                container.innerHTML = "<p class='no-posts'>Konular yüklenirken bir hata oluştu veya henüz indeks oluşturulmadı.</p>";
+                container.innerHTML = "<p class='no-posts'>Konular yüklenirken hata oluştu veya veritabanı henüz boş.</p>";
             }
         }
 
