@@ -3,51 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ana Sayfa - Hoş Geldiniz</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 350px; text-align: center; }
-        h2 { color: #333; }
-        p { color: #666; margin-bottom: 20px; }
-        button { padding: 10px 20px; background-color: #ff4d4d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        button:hover { background-color: #cc0000; }
-    </style>
+    <title>Topluluk Platformu</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+    <header>
+        <div id="guestNav">
+            <a href="login/" class="btn btn-secondary">Giriş Yap</a>
+            <a href="register/" class="btn">Kayıt Ol</a>
+        </div>
+        <div id="userNav" class="hidden" style="display: flex; align-items: center; gap: 12px;">
+            <span id="welcomeUser" style="font-size: 0.9rem; color: #58a6ff; font-weight: bold;"></span>
+            <button id="logoutBtn" class="btn-danger">Çıkış Yap</button>
+        </div>
+    </header>
+
     <div class="container">
-        <h2>Hoş Geldiniz!</h2>
-        <p id="userInfo">Kullanıcı bilgileri yükleniyor...</p>
-        <button id="logoutBtn">Çıkış Yap</button>
+        <div id="loginPrompt" class="box" style="text-align: center;">
+            <p style="color: #8b949e; margin-bottom: 0.8rem;">Yeni konu paylaşabilmek için giriş yapmalısınız.</p>
+            <a href="login/" class="btn btn-secondary">Giriş Yap veya Kayıt Ol</a>
+        </div>
+
+        <div id="newPostBox" class="box hidden">
+            <h3 style="margin-bottom: 0.8rem; font-size: 1.1rem;">Yeni Konu Başlat</h3>
+            <input type="text" id="postTitle" placeholder="Konu başlığını buraya yazın...">
+            <textarea id="postContent" rows="3" placeholder="Mesajınızı veya sorunuzu yazın..."></textarea>
+            <button id="publishBtn">Konuyu Yayınla</button>
+        </div>
+
+        <div id="postsList">
+            <p style="color: #8b949e; text-align: center;">Konular yükleniyor...</p>
+        </div>
     </div>
 
     <script type="module">
-        import { auth } from '../firebase-config.js';
-        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
+        import { auth, db } from './firebase-config.js';
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        const userInfo = document.getElementById('userInfo');
-        const logoutBtn = document.getElementById('logoutBtn');
+        let currentUser = null;
 
-        // Oturum durumunu kontrol et
+        // Oturum Kontrolü (Firebase dijital bileti otomatik kontrol eder)
         onAuthStateChanged(auth, (user) => {
+            currentUser = user;
             if (user) {
-                // Kullanıcı giriş yapmış
-                userInfo.textContent = `Giriş yapan e-posta: ${user.email}`;
+                document.getElementById('guestNav').classList.add('hidden');
+                document.getElementById('userNav').classList.remove('hidden');
+                document.getElementById('welcomeUser').innerText = '@' + (user.displayName || 'Üye');
+                document.getElementById('newPostBox').classList.remove('hidden');
+                document.getElementById('loginPrompt').classList.add('hidden');
             } else {
-                // Giriş yapılmamışsa login sayfasına at
-                window.location.href = "../login/index.html";
+                document.getElementById('guestNav').classList.remove('hidden');
+                document.getElementById('userNav').classList.add('hidden');
+                document.getElementById('newPostBox').classList.add('hidden');
+                document.getElementById('loginPrompt').classList.remove('hidden');
             }
         });
 
-        // Çıkış yap butonu
-        logoutBtn.addEventListener('click', async () => {
+        // Çıkış Yapma
+        document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
+
+        // Konu Paylaşma
+        document.getElementById('publishBtn').addEventListener('click', async () => {
+            if (!currentUser) return;
+            const title = document.getElementById('postTitle').value.trim();
+            const content = document.getElementById('postContent').value.trim();
+
+            if (!title || !content) {
+                alert("Lütfen başlık ve içerik alanlarını doldurun.");
+                return;
+            }
+
             try {
-                await signOut(auth);
-                window.location.href = "../login/index.html";
-            } catch (error) {
-                alert("Çıkış yapılırken bir hata oluştu: " + error.message);
+                await addDoc(collection(db, "posts"), {
+                    title: title,
+                    content: content,
+                    author: currentUser.displayName || 'Üye',
+                    createdAt: serverTimestamp()
+                });
+                document.getElementById('postTitle').value = '';
+                document.getElementById('postContent').value = '';
+            } catch (e) {
+                alert("Paylaşım hatası: " + e.message);
             }
         });
+
+        // Konuları Canlı Dinleme (Herkes birbirinin konusunu anında görür)
+        const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+        onSnapshot(q, (snapshot) => {
+            const postsList = document.getElementById('postsList');
+            let html = '';
+
+            snapshot.forEach((doc) => {
+                const post = doc.data();
+                const dateStr = post.createdAt ? post.createdAt.toDate().toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' }) : 'Az önce';
+                html += `
+                    <div class="post-card">
+                        <div class="post-title">${escapeHTML(post.title)}</div>
+                        <div class="post-meta">@${escapeHTML(post.author)} • ${dateStr}</div>
+                        <p>${escapeHTML(post.content)}</p>
+                    </div>
+                `;
+            });
+
+            if (html === '') {
+                html = '<div class="post-card"><p style="color:#8b949e;">Henüz konu açılmamış. İlk konuyu sen başlat!</p></div>';
+            }
+            postsList.innerHTML = html;
+        });
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[tag]));
+        }
     </script>
 </body>
 </html>
