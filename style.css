@@ -51,6 +51,9 @@ body {
     cursor: pointer;
     border: none;
     transition: background 0.2s;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
 }
 
 .btn-primary { background: #0284c7; color: white; }
@@ -65,12 +68,9 @@ body {
 .btn-outline { background: transparent; border: 1px solid #64748b; color: #f8fafc; }
 .btn-outline:hover { background: #334155; }
 
-.btn-danger { background: #dc2626; color: white; }
-.btn-danger:hover { background: #b91c1c; }
-
 .btn-sm { padding: 6px 10px; font-size: 12px; }
 
-.create-post-section, .posts-section, .modal-content {
+.create-post-section, .posts-section {
     background: #1e293b;
     padding: 20px;
     border-radius: 12px;
@@ -129,55 +129,8 @@ input:focus, textarea:focus {
     align-self: flex-end;
 }
 
-.no-posts {
+.loading-text, .no-posts {
     text-align: center;
     color: #94a3b8;
     padding: 20px;
-}
-
-/* Modal Stilleri */
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.modal-content {
-    width: 90%;
-    max-width: 400px;
-    background: #1e293b;
-    border: 1px solid #475569;
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.close-btn {
-    background: none;
-    border: none;
-    color: #f8fafc;
-    font-size: 24px;
-    cursor: pointer;
-}
-
-.setting-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-top: 10px;
-}
-
-.setting-group label {
-    font-size: 13px;
-    color: #94a3b8;
 }
