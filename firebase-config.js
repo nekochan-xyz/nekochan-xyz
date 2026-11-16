@@ -1,6 +1,6 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyACcbwPXw98DhtPtcY5BPaRQfBx0UL6Uxc",
@@ -12,9 +12,6 @@ const firebaseConfig = {
   measurementId: "G-VNE7GZ4GGD"
 };
 
-// Firebase'i başlat
 const app = initializeApp(firebaseConfig);
-
-// Diğer sayfalardan erişmek için dışa aktar
 export const auth = getAuth(app);
 export const db = getFirestore(app);
