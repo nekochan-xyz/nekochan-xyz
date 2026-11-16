@@ -1,59 +1,81 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giriş Yap</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 300px; }
-        h2 { text-align: center; color: #333; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background-color: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        button:hover { background-color: #0056b3; }
-        .error { color: red; font-size: 14px; text-align: center; }
-        .link { text-align: center; margin-top: 15px; font-size: 14px; }
-        .link a { color: #007BFF; text-decoration: none; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giriş Yap - XForum</title>
+  <link rel="stylesheet" href="../style.css">
 </head>
 <body>
 
-    <div class="container">
-        <h2>Giriş Yap</h2>
-        <form id="loginForm">
-            <input type="email" id="email" placeholder="E-posta Adresi" required>
-            <input type="password" id="password" placeholder="Şifre" required>
-            <button type="submit">Giriş Yap</button>
-            <p id="errorMsg" class="error"></p>
-        </form>
-        <div class="link">
-            Hesabın yok mu? <a href="../register/index.html">Kayıt Ol</a>
+  <header>
+    <a href="../" class="logo">XForum</a>
+    <a href="../" class="btn btn-secondary">Ana Sayfa</a>
+  </header>
+
+  <div class="container" style="max-width:420px; margin-top:40px;">
+    <div class="card">
+      <h2 style="margin-bottom:18px; text-align:center;">Giriş Yap</h2>
+      <div id="errorBox" class="error-msg hidden"></div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Kullanıcı Adı</label>
+          <input type="text" id="username" placeholder="Kullanıcı adınız" required>
         </div>
+
+        <div class="form-group">
+          <label>Şifre</label>
+          <div class="password-wrapper">
+            <input type="password" id="password" placeholder="Şifreniz" required>
+            <button type="button" class="toggle-pw" id="togglePw">Göster</button>
+          </div>
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn btn-primary" style="width:100%;">Giriş Yap</button>
+      </form>
+
+      <div style="margin-top:16px; text-align:center; font-size:0.9rem; color:#8b949e;">
+        Hesabın yok mu? <a href="../register/" style="color:#58a6ff; text-decoration:none;">Kayıt Ol</a> • 
+        <a href="../guestacc/" style="color:#58a6ff; text-decoration:none;">Misafir Girişi</a>
+      </div>
     </div>
+  </div>
 
-    <script type="module">
-        import { auth } from '../firebase-config.js';
-        import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
+  <script type="module">
+    import { auth } from "../firebase-config.js";
+    import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-        const loginForm = document.getElementById('loginForm');
-        const errorMsg = document.getElementById('errorMsg');
+    const pwInput = document.getElementById("password");
+    const toggleBtn = document.getElementById("togglePw");
+    toggleBtn.addEventListener("click", () => {
+      const isPassword = pwInput.type === "password";
+      pwInput.type = isPassword ? "text" : "password";
+      toggleBtn.innerText = isPassword ? "Gizle" : "Göster";
+    });
 
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            errorMsg.textContent = "";
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errorBox = document.getElementById("errorBox");
+      errorBox.classList.add("hidden");
 
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-                alert("Giriş başarılı!");
-                // Giriş yapıldıktan sonra yönlendirilecek ana sayfa (İhtiyacınıza göre değiştirebilirsiniz)
-                window.location.href = "../webhome/index.html"; 
-            } catch (error) {
-                errorMsg.textContent = "Giriş başarısız: E-posta veya şifre hatalı.";
-            }
-        });
-    </script>
+      const username = document.getElementById("username").value.trim().toLowerCase();
+      const password = pwInput.value;
+      const submitBtn = document.getElementById("submitBtn");
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = "Giriş yapılıyor...";
+
+      try {
+        await signInWithEmailAndPassword(auth, username + "@xforum.local", password);
+        window.location.href = "../";
+      } catch (err) {
+        errorBox.innerText = "Kullanıcı adı veya şifre hatalı.";
+        errorBox.classList.remove("hidden");
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Giriş Yap";
+      }
+    });
+  </script>
 </body>
 </html>
-
