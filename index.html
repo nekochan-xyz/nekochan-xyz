@@ -1,123 +1,424 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Topluluk Platformu</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XForum</title>
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 
-    <header>
-        <div id="guestNav">
-            <a href="login/" class="btn btn-secondary">Giriş Yap</a>
-            <a href="register/" class="btn">Kayıt Ol</a>
-        </div>
-        <div id="userNav" class="hidden" style="display: flex; align-items: center; gap: 12px;">
-            <span id="welcomeUser" style="font-size: 0.9rem; color: #58a6ff; font-weight: bold;"></span>
-            <button id="logoutBtn" class="btn-danger">Çıkış Yap</button>
-        </div>
-    </header>
+  <header>
+    <a href="./" class="logo">XForum</a>
+    <div id="guestNav" class="nav-buttons">
+      <a href="./login/" class="btn btn-secondary">Giriş Yap</a>
+      <a href="./register/" class="btn btn-primary">Kayıt Ol</a>
+      <a href="./guestacc/" class="btn btn-secondary">Misafir</a>
+    </div>
+    <div id="userNav" class="nav-buttons hidden">
+      <span id="welcomeUser" style="font-size:0.9rem; color:#58a6ff; font-weight:600;"></span>
+      <button id="openSettingsBtn" class="btn btn-secondary">Hesap Ayarları</button>
+    </div>
+  </header>
 
-    <div class="container">
-        <div id="loginPrompt" class="box" style="text-align: center;">
-            <p style="color: #8b949e; margin-bottom: 0.8rem;">Yeni konu paylaşabilmek için giriş yapmalısınız.</p>
-            <a href="login/" class="btn btn-secondary">Giriş Yap veya Kayıt Ol</a>
-        </div>
-
-        <div id="newPostBox" class="box hidden">
-            <h3 style="margin-bottom: 0.8rem; font-size: 1.1rem;">Yeni Konu Başlat</h3>
-            <input type="text" id="postTitle" placeholder="Konu başlığını buraya yazın...">
-            <textarea id="postContent" rows="3" placeholder="Mesajınızı veya sorunuzu yazın..."></textarea>
-            <button id="publishBtn">Konuyu Yayınla</button>
-        </div>
-
-        <div id="postsList">
-            <p style="color: #8b949e; text-align: center;">Konular yükleniyor...</p>
-        </div>
+  <div class="container">
+    <!-- Giriş Yapmamış Kullanıcı Uyarısı -->
+    <div id="loginPrompt" class="card" style="text-align:center;">
+      <p style="margin-bottom:12px; color:#8b949e;">Konu paylaşmak için giriş yapın veya misafir olarak devam edin.</p>
+      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        <a href="./login/" class="btn btn-secondary">Giriş Yap</a>
+        <a href="./register/" class="btn btn-primary">Kayıt Ol</a>
+        <a href="./guestacc/" class="btn btn-secondary">Anonim Giriş</a>
+      </div>
     </div>
 
-    <script type="module">
-        import { auth, db } from './firebase-config.js';
-        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
-        import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+    <!-- Yeni Konu Oluşturma Kutusu -->
+    <div id="newPostBox" class="card hidden">
+      <h3 style="margin-bottom:12px; font-size:1.1rem;">Yeni Konu Başlat</h3>
+      <div class="form-group">
+        <input type="text" id="postTitle" placeholder="Konu başlığı..." maxlength="100">
+      </div>
+      <div class="form-group">
+        <textarea id="postContent" rows="3" placeholder="Ne düşünüyorsun?"></textarea>
+      </div>
+      <button id="publishBtn" class="btn btn-primary" style="width:100%;">Konuyu Yayınla</button>
+    </div>
 
-        let currentUser = null;
+    <!-- Gönderi Akışı -->
+    <div id="postsList">
+      <p style="text-align:center; color:#8b949e;">Gönderiler yükleniyor...</p>
+    </div>
+  </div>
 
-        // Oturum Kontrolü (Firebase dijital bileti otomatik kontrol eder)
-        onAuthStateChanged(auth, (user) => {
-            currentUser = user;
-            if (user) {
-                document.getElementById('guestNav').classList.add('hidden');
-                document.getElementById('userNav').classList.remove('hidden');
-                document.getElementById('welcomeUser').innerText = '@' + (user.displayName || 'Üye');
-                document.getElementById('newPostBox').classList.remove('hidden');
-                document.getElementById('loginPrompt').classList.add('hidden');
-            } else {
-                document.getElementById('guestNav').classList.remove('hidden');
-                document.getElementById('userNav').classList.add('hidden');
-                document.getElementById('newPostBox').classList.add('hidden');
-                document.getElementById('loginPrompt').classList.remove('hidden');
-            }
-        });
+  <!-- HESAP AYARLARI MODALI -->
+  <div id="settingsModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Hesap Ayarları</h3>
+        <button id="closeSettingsBtn" class="close-modal">&times;</button>
+      </div>
 
-        // Çıkış Yapma
-        document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
+      <div id="settingsAlert" class="hidden"></div>
 
-        // Konu Paylaşma
-        document.getElementById('publishBtn').addEventListener('click', async () => {
-            if (!currentUser) return;
-            const title = document.getElementById('postTitle').value.trim();
-            const content = document.getElementById('postContent').value.trim();
+      <!-- Kayıtlı Kullanıcılara Özel Ayarlar -->
+      <div id="registeredSettings">
+        <div class="settings-tabs">
+          <button type="button" class="tab-btn active" data-tab="tabUsername">Kullanıcı Adı</button>
+          <button type="button" class="tab-btn" data-tab="tabPassword">Şifre Değiştir</button>
+          <button type="button" class="tab-btn" data-tab="tabDelete">Hesabı Sil</button>
+        </div>
 
-            if (!title || !content) {
-                alert("Lütfen başlık ve içerik alanlarını doldurun.");
-                return;
-            }
+        <!-- 1. Kullanıcı Adı Değiştirme -->
+        <div id="tabUsername" class="tab-content">
+          <div class="form-group">
+            <label>Yeni Kullanıcı Adı (Harf, rakam, _ , - , .)</label>
+            <input type="text" id="newUsernameInput" placeholder="Yeni kullanıcı adınız" minlength="3" maxlength="25">
+          </div>
+          <div class="form-group">
+            <label>Onay İçin Mevcut Şifreniz</label>
+            <div class="password-wrapper">
+              <input type="password" id="userChangePwInput" placeholder="Mevcut şifreniz">
+              <button type="button" class="toggle-pw" data-target="userChangePwInput">Göster</button>
+            </div>
+          </div>
+          <button type="button" id="saveUsernameBtn" class="btn btn-primary" style="width:100%;">Kullanıcı Adını Değiştir</button>
+        </div>
 
-            try {
-                await addDoc(collection(db, "posts"), {
-                    title: title,
-                    content: content,
-                    author: currentUser.displayName || 'Üye',
-                    createdAt: serverTimestamp()
-                });
-                document.getElementById('postTitle').value = '';
-                document.getElementById('postContent').value = '';
-            } catch (e) {
-                alert("Paylaşım hatası: " + e.message);
-            }
-        });
+        <!-- 2. Şifre Değiştirme -->
+        <div id="tabPassword" class="tab-content hidden">
+          <div class="form-group">
+            <label>Varsayılan (Mevcut) Şifre</label>
+            <div class="password-wrapper">
+              <input type="password" id="oldPassword" placeholder="Mevcut şifreniz">
+              <button type="button" class="toggle-pw" data-target="oldPassword">Göster</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Yeni Şifre (En az 8 karakter)</label>
+            <div class="password-wrapper">
+              <input type="password" id="newPassword1" placeholder="Yeni şifre">
+              <button type="button" class="toggle-pw" data-target="newPassword1">Göster</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Yeni Şifre (Tekrar)</label>
+            <div class="password-wrapper">
+              <input type="password" id="newPassword2" placeholder="Yeni şifreyi tekrar girin">
+              <button type="button" class="toggle-pw" data-target="newPassword2">Göster</button>
+            </div>
+          </div>
+          <button type="button" id="changePasswordBtn" class="btn btn-primary" style="width:100%;">Değiştir</button>
+        </div>
 
-        // Konuları Canlı Dinleme (Herkes birbirinin konusunu anında görür)
-        const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
-        onSnapshot(q, (snapshot) => {
-            const postsList = document.getElementById('postsList');
-            let html = '';
+        <!-- 3. Hesabı Silme -->
+        <div id="tabDelete" class="tab-content hidden">
+          <p style="font-size:0.88rem; color:#f85149; margin-bottom:12px;">
+            Dikkat: Hesabınızı sildiğinizde geri döndürülemez! Onaylamak için şifrenizi girin.
+          </p>
+          <div class="form-group">
+            <label>Şifre Doğrulaması</label>
+            <div class="password-wrapper">
+              <input type="password" id="deleteConfirmPw" placeholder="Şifrenizi girin">
+              <button type="button" class="toggle-pw" data-target="deleteConfirmPw">Göster</button>
+            </div>
+          </div>
+          <button type="button" id="deleteAccountBtn" class="btn btn-danger" style="width:100%;">Hesabı Kalıcı Olarak Sil</button>
+        </div>
 
-            snapshot.forEach((doc) => {
-                const post = doc.data();
-                const dateStr = post.createdAt ? post.createdAt.toDate().toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' }) : 'Az önce';
-                html += `
-                    <div class="post-card">
-                        <div class="post-title">${escapeHTML(post.title)}</div>
-                        <div class="post-meta">@${escapeHTML(post.author)} • ${dateStr}</div>
-                        <p>${escapeHTML(post.content)}</p>
-                    </div>
-                `;
-            });
+        <hr class="divider">
+      </div>
 
-            if (html === '') {
-                html = '<div class="post-card"><p style="color:#8b949e;">Henüz konu açılmamış. İlk konuyu sen başlat!</p></div>';
-            }
-            postsList.innerHTML = html;
-        });
+      <!-- Hesaptan Çıkış Yap (Hem Anonim Hem Kayıtlılar İçin) -->
+      <button type="button" id="logoutBtn" class="btn btn-secondary" style="width:100%; border-color:#da3633; color:#f85149;">
+        Hesaptan Çıkış Yap
+      </button>
+    </div>
+  </div>
 
-        function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, tag => ({
-                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-            }[tag]));
+  <script type="module">
+    import { auth, db } from "./firebase-config.js";
+    import { 
+      onAuthStateChanged, 
+      signOut, 
+      updateProfile, 
+      updateEmail,
+      updatePassword, 
+      deleteUser, 
+      EmailAuthProvider, 
+      reauthenticateWithCredential 
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    let currentUser = null;
+
+    // Oturum kontrolü
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      if (user) {
+        document.getElementById("guestNav").classList.add("hidden");
+        document.getElementById("loginPrompt").classList.add("hidden");
+        document.getElementById("userNav").classList.remove("hidden");
+        document.getElementById("newPostBox").classList.remove("hidden");
+
+        if (user.isAnonymous) {
+          document.getElementById("welcomeUser").innerText = "Anonim Misafir";
+          document.getElementById("registeredSettings").classList.add("hidden");
+        } else {
+          const username = user.displayName || user.email.split("@")[0];
+          document.getElementById("welcomeUser").innerText = "@" + username;
+          document.getElementById("registeredSettings").classList.remove("hidden");
         }
-    </script>
+      } else {
+        document.getElementById("guestNav").classList.remove("hidden");
+        document.getElementById("loginPrompt").classList.remove("hidden");
+        document.getElementById("userNav").classList.add("hidden");
+        document.getElementById("newPostBox").classList.add("hidden");
+        document.getElementById("settingsModal").classList.add("hidden");
+      }
+    });
+
+    // Modal Aç / Kapat
+    const modal = document.getElementById("settingsModal");
+    document.getElementById("openSettingsBtn").addEventListener("click", () => {
+      clearAlert();
+      modal.classList.remove("hidden");
+    });
+    document.getElementById("closeSettingsBtn").addEventListener("click", () => {
+      modal.classList.add("hidden");
+    });
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) modal.classList.add("hidden");
+    });
+
+    // Sekme (Tab) Geçişleri
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        clearAlert();
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
+        btn.classList.add("active");
+        document.getElementById(btn.dataset.tab).classList.remove("hidden");
+      });
+    });
+
+    // Tüm Şifreyi Göster/Gizle Butonları
+    document.querySelectorAll(".toggle-pw").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const input = document.getElementById(btn.dataset.target);
+        const isPw = input.type === "password";
+        input.type = isPw ? "text" : "password";
+        btn.innerText = isPw ? "Gizle" : "Göster";
+      });
+    });
+
+    function showAlert(msg, isError = true) {
+      const box = document.getElementById("settingsAlert");
+      box.innerText = msg;
+      box.className = isError ? "error-msg" : "success-msg";
+    }
+
+    function clearAlert() {
+      const box = document.getElementById("settingsAlert");
+      box.className = "hidden";
+      box.innerText = "";
+    }
+
+    // Yardımcı: Şifre ile Yeniden Doğrulama
+    async function reauth(password) {
+      const credential = EmailAuthProvider.credential(currentUser.email, password);
+      await reauthenticateWithCredential(currentUser, credential);
+    }
+
+    // 1. Kullanıcı Adı Değiştirme
+    document.getElementById("saveUsernameBtn").addEventListener("click", async () => {
+      clearAlert();
+      const newUsername = document.getElementById("newUsernameInput").value.trim();
+      const pw = document.getElementById("userChangePwInput").value;
+
+      if (!/^[a-zA-Z0-9._-]{3,25}$/.test(newUsername)) {
+        return showAlert("Kullanıcı adı 3-25 karakter olmalı ve sadece harf, rakam, (_, -, .) içermelidir.");
+      }
+      if (!pw) return showAlert("Onaylamak için mevcut şifrenizi girin.");
+
+      const btn = document.getElementById("saveUsernameBtn");
+      btn.disabled = true;
+      btn.innerText = "Güncelleniyor...";
+
+      try {
+        await reauth(pw);
+        const newFakeEmail = newUsername.toLowerCase() + "@xforum.local";
+        await updateEmail(currentUser, newFakeEmail);
+        await updateProfile(currentUser, { displayName: newUsername });
+
+        document.getElementById("welcomeUser").innerText = "@" + newUsername;
+        document.getElementById("newUsernameInput").value = "";
+        document.getElementById("userChangePwInput").value = "";
+        showAlert("Kullanıcı adınız başarıyla @" + newUsername + " olarak değiştirildi!", false);
+      } catch (err) {
+        if (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
+          showAlert("Mevcut şifreniz hatalı.");
+        } else if (err.code === "auth/email-already-in-use") {
+          showAlert("Bu kullanıcı adı başka biri tarafından kullanılıyor.");
+        } else {
+          showAlert("Hata: " + err.message);
+        }
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Kullanıcı Adını Değiştir";
+      }
+    });
+
+    // 2. Şifre Değiştirme
+    document.getElementById("changePasswordBtn").addEventListener("click", async () => {
+      clearAlert();
+      const oldPw = document.getElementById("oldPassword").value;
+      const newPw1 = document.getElementById("newPassword1").value;
+      const newPw2 = document.getElementById("newPassword2").value;
+
+      if (!oldPw) return showAlert("Lütfen varsayılan (mevcut) şifrenizi girin.");
+      if (newPw1.length < 8) return showAlert("Yeni şifreniz en az 8 karakter olmalıdır.");
+      if (newPw1 !== newPw2) return showAlert("Yeni şifreler birbiriyle eşleşmiyor.");
+
+      const btn = document.getElementById("changePasswordBtn");
+      btn.disabled = true;
+      btn.innerText = "Değiştiriliyor...";
+
+      try {
+        await reauth(oldPw);
+        await updatePassword(currentUser, newPw1);
+
+        document.getElementById("oldPassword").value = "";
+        document.getElementById("newPassword1").value = "";
+        document.getElementById("newPassword2").value = "";
+        showAlert("Şifreniz başarıyla değiştirildi!", false);
+      } catch (err) {
+        if (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
+          showAlert("Varsayılan (mevcut) şifreniz yanlış.");
+        } else {
+          showAlert("Şifre değiştirilemedi: " + err.message);
+        }
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Değiştir";
+      }
+    });
+
+    // 3. Hesabı Silme (Şifre Doğrulamalı)
+    document.getElementById("deleteAccountBtn").addEventListener("click", async () => {
+      clearAlert();
+      const pw = document.getElementById("deleteConfirmPw").value;
+      if (!pw) return showAlert("Hesabınızı silmek için şifrenizi girmelisiniz.");
+
+      const btn = document.getElementById("deleteAccountBtn");
+      btn.disabled = true;
+      btn.innerText = "Siliniyor...";
+
+      try {
+        await reauth(pw);
+        await deleteUser(currentUser);
+        alert("Hesabınız kalıcı olarak silindi.");
+        window.location.reload();
+      } catch (err) {
+        if (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
+          showAlert("Şifre hatalı! Hesap silme işlemi iptal edildi.");
+        } else {
+          showAlert("Hesap silinemedi: " + err.message);
+        }
+        btn.disabled = false;
+        btn.innerText = "Hesabı Kalıcı Olarak Sil";
+      }
+    });
+
+    // Hesaptan Çıkış Yap
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await signOut(auth);
+      modal.classList.add("hidden");
+    });
+
+    // Yeni konu paylaşma
+    document.getElementById("publishBtn").addEventListener("click", async () => {
+      if (!currentUser) return;
+
+      const titleInput = document.getElementById("postTitle");
+      const contentInput = document.getElementById("postContent");
+      const title = titleInput.value.trim();
+      const content = contentInput.value.trim();
+
+      if (!title || !content) {
+        alert("Lütfen başlık ve mesaj alanlarını doldurun.");
+        return;
+      }
+
+      const btn = document.getElementById("publishBtn");
+      btn.disabled = true;
+      btn.innerText = "Yayınlanıyor...";
+
+      try {
+        const authorName = currentUser.isAnonymous 
+          ? "Anonim-" + currentUser.uid.slice(0, 5) 
+          : (currentUser.displayName || currentUser.email.split("@")[0]);
+
+        await addDoc(collection(db, "posts"), {
+          title: title,
+          content: content,
+          author: authorName,
+          isAnonymous: currentUser.isAnonymous,
+          uid: currentUser.uid,
+          createdAt: serverTimestamp()
+        });
+
+        titleInput.value = "";
+        contentInput.value = "";
+      } catch (err) {
+        alert("Paylaşım hatası: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Konuyu Yayınla";
+      }
+    });
+
+    // Gönderileri canlı listele
+    const postsQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+    onSnapshot(postsQuery, (snapshot) => {
+      const listEl = document.getElementById("postsList");
+      if (snapshot.empty) {
+        listEl.innerHTML = `<p style="text-align:center; color:#8b949e;">Henüz hiç konu açılmamış. İlk konuyu sen başlat!</p>`;
+        return;
+      }
+
+      listEl.innerHTML = "";
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        const dateStr = data.createdAt ? new Date(data.createdAt.toDate()).toLocaleString("tr-TR", {
+          day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"
+        }) : "Az önce";
+
+        const badge = data.isAnonymous ? `<span class="badge-guest">Misafir</span>` : "";
+
+        const card = document.createElement("div");
+        card.className = "post-card";
+        card.innerHTML = `
+          <div class="post-header">
+            <div>
+              <span class="post-author">@${escapeHTML(data.author || "Kullanıcı")}</span>
+              ${badge}
+            </div>
+            <span class="post-time">${dateStr}</span>
+          </div>
+          <div class="post-title">${escapeHTML(data.title)}</div>
+          <div class="post-content">${escapeHTML(data.content)}</div>
+        `;
+        listEl.appendChild(card);
+      });
+    }, (error) => {
+      document.getElementById("postsList").innerHTML = `<p class="error-msg" style="text-align:center;">Mesajlar yüklenemedi: ${error.message}</p>`;
+    });
+
+    function escapeHTML(str) {
+      return String(str).replace(/[&<>"']/g, (m) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[m]));
+    }
+  </script>
 </body>
 </html>
