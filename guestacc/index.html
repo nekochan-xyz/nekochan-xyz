@@ -1,52 +1,56 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Misafir Girişi</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 320px; text-align: center; }
-        h2 { color: #333; }
-        p { color: #666; font-size: 14px; margin-bottom: 20px; }
-        button { width: 100%; padding: 12px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        button:hover { background-color: #5a6268; }
-        .error { color: red; font-size: 14px; margin-top: 10px; }
-        .link { margin-top: 15px; font-size: 14px; }
-        .link a { color: #007BFF; text-decoration: none; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Misafir Girişi - XForum</title>
+  <link rel="stylesheet" href="../style.css">
 </head>
 <body>
 
-    <div class="container">
-        <h2>Misafir Olarak Giriş Yap</h2>
-        <p>Hesap oluşturmadan hızlıca sistemi test etmek veya göz atmak için misafir girişini kullanabilirsiniz.</p>
-        <button id="guestBtn">Misafir Girişi Yap</button>
-        <p id="errorMsg" class="error"></p>
-        <div class="link">
-            <a href="../login/index.html">Normal Giriş Yap</a>
-        </div>
+  <header>
+    <a href="../" class="logo">XForum</a>
+    <a href="../" class="btn btn-secondary">Ana Sayfa</a>
+  </header>
+
+  <div class="container" style="max-width:420px; margin-top:40px;">
+    <div class="card" style="text-align:center;">
+      <h2 style="margin-bottom:10px;">Anonim Misafir Girişi</h2>
+      <p style="color:#8b949e; font-size:0.9rem; margin-bottom:20px;">
+        Kayıt olmadan geçici bir misafir hesabıyla foruma katılabilir ve konu paylaşabilirsiniz.
+      </p>
+
+      <div id="errorBox" class="error-msg hidden"></div>
+      <button id="guestBtn" class="btn btn-primary" style="width:100%;">Anonim Olarak Devam Et</button>
+
+      <div style="margin-top:16px; font-size:0.9rem; color:#8b949e;">
+        Kalıcı hesap için <a href="../register/" style="color:#58a6ff; text-decoration:none;">Kayıt Ol</a>
+      </div>
     </div>
+  </div>
 
-    <script type="module">
-        import { auth } from '../firebase-config.js';
-        import { signInAnonymously } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
+  <script type="module">
+    import { auth } from "../firebase-config.js";
+    import { signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-        const guestBtn = document.getElementById('guestBtn');
-        const errorMsg = document.getElementById('errorMsg');
+    document.getElementById("guestBtn").addEventListener("click", async () => {
+      const btn = document.getElementById("guestBtn");
+      const errorBox = document.getElementById("errorBox");
+      errorBox.classList.add("hidden");
 
-        guestBtn.addEventListener('click', async () => {
-            errorMsg.textContent = "";
-            try {
-                await signInAnonymously(auth);
-                alert("Misafir olarak başarıyla giriş yapıldı!");
-                // Misafir girişinden sonra yönlendirilecek sayfa
-                window.location.href = "../webhome/index.html";
-            } catch (error) {
-                errorMsg.textContent = "Hata: " + error.message;
-            }
-        });
-    </script>
+      btn.disabled = true;
+      btn.innerText = "Bağlanılıyor...";
+
+      try {
+        await signInAnonymously(auth);
+        window.location.href = "../";
+      } catch (err) {
+        errorBox.innerText = "Anonim giriş başarısız: " + err.message;
+        errorBox.classList.remove("hidden");
+        btn.disabled = false;
+        btn.innerText = "Anonim Olarak Devam Et";
+      }
+    });
+  </script>
 </body>
 </html>
-
