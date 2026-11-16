@@ -3,113 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ana Sayfa - Xforum</title>
+    <title>Ana Sayfa - Hoş Geldiniz</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: #0d1117; color: #c9d1d9; line-height: 1.6; }
-        header { background-color: #161b22; border-bottom: 1px solid #30363d; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-        .user-info { color: #58a6ff; font-weight: bold; }
-        .container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
-        .box { background-color: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.2rem; margin-bottom: 1.5rem; }
-        input, textarea { width: 100%; background-color: #0d1117; border: 1px solid #30363d; color: #c9d1d9; padding: 0.75rem; border-radius: 6px; margin-bottom: 0.75rem; font-size: 0.95rem; }
-        input:focus, textarea:focus { outline: none; border-color: #58a6ff; }
-        button { background-color: #238636; color: #fff; border: none; padding: 0.55rem 1.1rem; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        button:hover { background-color: #2ea043; }
-        .btn-danger { background-color: #da3633; }
-        .btn-danger:hover { background-color: #f85149; }
-        .post-card { background-color: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem; }
-        .post-title { color: #58a6ff; font-size: 1.2rem; margin-bottom: 0.4rem; }
-        .post-meta { font-size: 0.8rem; color: #8b949e; margin-bottom: 0.75rem; }
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 350px; text-align: center; }
+        h2 { color: #333; }
+        p { color: #666; margin-bottom: 20px; }
+        button { padding: 10px 20px; background-color: #ff4d4d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #cc0000; }
     </style>
 </head>
 <body>
 
-    <header>
-        <span id="welcomeUser" class="user-info">Yükleniyor...</span>
-        <button id="logoutBtn" class="btn-danger">Çıkış Yap</button>
-    </header>
-
     <div class="container">
-        <div class="box">
-            <h3 style="margin-bottom: 0.8rem;">Yeni Konu / Mesaj Yayınla</h3>
-            <input type="text" id="postTitle" placeholder="Konu başlığı...">
-            <textarea id="postContent" rows="3" placeholder="Mesajınızı yazın..."></textarea>
-            <button id="publishBtn">Yayınla</button>
-        </div>
-
-        <div id="postsList">
-            <p style="color: #8b949e; text-align: center;">Konular yükleniyor...</p>
-        </div>
+        <h2>Hoş Geldiniz!</h2>
+        <p id="userInfo">Kullanıcı bilgileri yükleniyor...</p>
+        <button id="logoutBtn">Çıkış Yap</button>
     </div>
 
     <script type="module">
-        import { auth, db } from '../firebase-config.js';
-        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { auth } from '../firebase-config.js';
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
 
-        let currentUser = null;
+        const userInfo = document.getElementById('userInfo');
+        const logoutBtn = document.getElementById('logoutBtn');
 
+        // Oturum durumunu kontrol et
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                currentUser = user;
-                document.getElementById('welcomeUser').innerText = '@' + (user.displayName || 'Kullanıcı');
+                // Kullanıcı giriş yapmış
+                userInfo.textContent = `Giriş yapan e-posta: ${user.email}`;
             } else {
                 // Giriş yapılmamışsa login sayfasına at
-                window.location.href = '../login/';
+                window.location.href = "../login/index.html";
             }
         });
 
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
-            await signOut(auth);
-            window.location.href = '../login/';
-        });
-
-        document.getElementById('publishBtn').addEventListener('click', async () => {
-            if (!currentUser) return;
-            const title = document.getElementById('postTitle').value.trim();
-            const content = document.getElementById('postContent').value.trim();
-
-            if (!title || !content) {
-                alert("Lütfen başlık ve içerik doldurun.");
-                return;
-            }
-
+        // Çıkış yap butonu
+        logoutBtn.addEventListener('click', async () => {
             try {
-                await addDoc(collection(db, "posts"), {
-                    title: title,
-                    content: content,
-                    author: currentUser.displayName || 'Üye',
-                    createdAt: serverTimestamp()
-                });
-                document.getElementById('postTitle').value = '';
-                document.getElementById('postContent').value = '';
-            } catch (e) {
-                alert("Hata: " + e.message);
+                await signOut(auth);
+                window.location.href = "../login/index.html";
+            } catch (error) {
+                alert("Çıkış yapılırken bir hata oluştu: " + error.message);
             }
         });
-
-        const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
-        onSnapshot(q, (snapshot) => {
-            const postsList = document.getElementById('postsList');
-            let html = '';
-            snapshot.forEach((doc) => {
-                const post = doc.data();
-                const dateStr = post.createdAt ? post.createdAt.toDate().toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' }) : 'Az önce';
-                html += `
-                    <div class="post-card">
-                        <div class="post-title">${escapeHTML(post.title)}</div>
-                        <div class="post-meta">@${escapeHTML(post.author)} • ${dateStr}</div>
-                        <p>${escapeHTML(post.content)}</p>
-                    </div>
-                `;
-            });
-            postsList.innerHTML = html || '<p style="color:#8b949e; text-align:center;">Henüz mesaj yok.</p>';
-        });
-
-        function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
-        }
     </script>
 </body>
 </html>
-
