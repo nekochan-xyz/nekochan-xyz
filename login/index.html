@@ -24,7 +24,7 @@
     <div class="container">
         <h2>Giriş Yap</h2>
         <form id="loginForm">
-            <input type="email" id="email" placeholder="E-posta Adresi" required>
+            <input type="text" id="username" placeholder="Kullanıcı Adı" required>
             <input type="password" id="password" placeholder="Şifre" required>
             <button type="submit">Giriş Yap</button>
             <p id="errorMsg" class="error"></p>
@@ -35,26 +35,37 @@
         <a href="../index.html" class="back-home">← Ana Sayfaya Dön</a>
     </div>
 
-    <!-- Firebase ve Giriş Mantığı (10.12.2 Uyumlu) -->
+    <!-- Firebase ve Giriş Mantığı -->
     <script type="module">
         import { auth } from '../firebase-config.js';
         import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+        // Kayıt sayfasından yönlendirildiyse bilgileri otomatik doldur
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('username')) {
+            document.getElementById('username').value = urlParams.get('username');
+        }
+        if (urlParams.has('password')) {
+            document.getElementById('password').value = urlParams.get('password');
+        }
 
         const loginForm = document.getElementById('loginForm');
         const errorMsg = document.getElementById('errorMsg');
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('email').value;
+            const usernameInput = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             errorMsg.textContent = "";
 
+            const syntheticEmail = usernameInput.toLowerCase() + "@xforum.local";
+
             try {
-                await signInWithEmailAndPassword(auth, email, password);
+                await signInWithEmailAndPassword(auth, syntheticEmail, password);
                 alert("Giriş başarılı!");
                 window.location.href = "../index.html"; 
             } catch (error) {
-                errorMsg.textContent = "Giriş başarısız: E-posta veya şifre hatalı.";
+                errorMsg.textContent = "Giriş başarısız: Kullanıcı adı veya şifre hatalı.";
             }
         });
     </script>
