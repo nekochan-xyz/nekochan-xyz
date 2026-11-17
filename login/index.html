@@ -26,7 +26,7 @@
         <form id="loginForm">
             <input type="text" id="username" placeholder="Kullanıcı Adı" required>
             <input type="password" id="password" placeholder="Şifre" required>
-            <button type="submit">Giriş Yap</button>
+            <button type="submit" id="submitBtn">Giriş Yap</button>
             <p id="errorMsg" class="error"></p>
         </form>
         <div class="link">
@@ -35,7 +35,7 @@
         <a href="../index.html" class="back-home">← Ana Sayfaya Dön</a>
     </div>
 
-    <!-- Firebase ve Giriş Mantığı -->
+    <!-- Firebase ve Giriş Mantığı (10.12.2 Uyumlu) -->
     <script type="module">
         import { auth } from '../firebase-config.js';
         import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -51,6 +51,7 @@
 
         const loginForm = document.getElementById('loginForm');
         const errorMsg = document.getElementById('errorMsg');
+        const submitBtn = document.getElementById('submitBtn');
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -60,11 +61,15 @@
 
             const syntheticEmail = usernameInput.toLowerCase() + "@xforum.local";
 
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Giriş Yapılıyor...";
+
             try {
                 await signInWithEmailAndPassword(auth, syntheticEmail, password);
-                alert("Giriş başarılı!");
                 window.location.href = "../index.html"; 
             } catch (error) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Giriş Yap";
                 errorMsg.textContent = "Giriş başarısız: Kullanıcı adı veya şifre hatalı.";
             }
         });
