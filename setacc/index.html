@@ -67,10 +67,11 @@
 
     <script type="module">
         import { auth, db } from '../firebase-config.js';
-        import { onAuthStateChanged, updatePassword, updateEmail, signInWithEmailAndPassword, deleteUser } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { onAuthStateChanged, updatePassword, signInWithEmailAndPassword, deleteUser } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { doc, getDoc, setDoc, deleteDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         let currentUser = null;
+        let activeUsername = "";
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
@@ -91,20 +92,20 @@
             document.getElementById('accountCreated').textContent = creationTime;
 
             // Kullanıcı adı
-            let username = user.email ? user.email.split('@')[0] : "Kullanıcı";
+            activeUsername = user.email ? user.email.split('@')[0] : "Kullanıcı";
             try {
                 const userDoc = await getDoc(doc(db, "users", user.uid));
                 if (userDoc.exists() && userDoc.data().username) {
-                    username = userDoc.data().username;
+                    activeUsername = userDoc.data().username;
                 }
             } catch (e) {
                 console.warn("Firestore okuma uyarısı:", e);
             }
-            document.getElementById('currentUsername').textContent = username;
-            document.getElementById('newUsername').value = username;
+            document.getElementById('currentUsername').textContent = activeUsername;
+            document.getElementById('newUsername').value = activeUsername;
         });
 
-        // Kullanıcı Adı Değiştir
+        // Kullanıcı Adı Değiştir (Firestore Tabanlı ve Çakışma Kontrollü)
         window.changeUsername = async () => {
             const msgEl = document.getElementById('usernameMsg');
             msgEl.textContent = "";
@@ -119,38 +120,37 @@
                 return;
             }
 
-            if (newName.toLowerCase() === currentUser.email.split('@')[0].toLowerCase()) {
+            if (newName.toLowerCase() === activeUsername.toLowerCase()) {
                 msgEl.textContent = "Zaten bu kullanıcı adını kullanıyorsunuz.";
                 msgEl.classList.add("error");
                 return;
             }
 
-            const newEmail = newName.toLowerCase() + "@xforum.local";
-
             try {
-                await updateEmail(currentUser, newEmail);
+                // 1. Kullanıcı adı daha önce alınmış mı kontrol et
+                const q = query(collection(db, "users"), where("username", "==", newName));
+                const querySnapshot = await getDocs(q);
                 
-                try {
-                    await setDoc(doc(db, "users", currentUser.uid), {
-                        username: newName,
-                        email: newEmail,
-                        updatedAt: new Date().toISOString()
-                    }, { merge: true });
-                } catch(err) {
-                    console.warn("Firestore güncellenemedi:", err);
+                if (!querySnapshot.empty) {
+                    msgEl.textContent = "Bu kullanıcı adı zaten kullanımda! Başka bir ad seçin.";
+                    msgEl.classList.add("error");
+                    return;
                 }
 
+                // 2. Firestore'daki kullanıcı adını güncelle
+                await setDoc(doc(db, "users", currentUser.uid), {
+                    username: newName,
+                    email: currentUser.email,
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+
+                activeUsername = newName;
                 document.getElementById('currentUsername').textContent = newName;
                 msgEl.textContent = "Kullanıcı adı başarıyla değiştirildi!";
                 msgEl.classList.add("success");
             } catch (error) {
-                if (error.code === 'auth/email-already-in-use') {
-                    msgEl.textContent = "Bu kullanıcı adı zaten kullanımda!";
-                } else if (error.code === 'auth/requires-recent-login') {
-                    msgEl.textContent = "Güvenlik nedeniyle lütfen çıkış yapıp tekrar giriş yaptıktan sonra deneyin.";
-                } else {
-                    msgEl.textContent = "Hata: " + error.message;
-                }
+                console.error("Kullanıcı adı değiştirme hatası:", error);
+                msgEl.textContent = "Hata: " + error.message;
                 msgEl.classList.add("error");
             }
         };
@@ -246,4 +246,3 @@
     </script>
 </body>
 </html>
-
