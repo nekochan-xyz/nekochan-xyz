@@ -39,7 +39,7 @@
         </section>
     </div>
 
-    <!-- Firebase ve Uygulama Mantığı -->
+    <!-- Firebase ve Uygulama Mantığı (10.12.2 Uyumlu) -->
     <script type="module">
         import { auth, db } from './firebase-config.js';
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -93,7 +93,7 @@
                 
                 // Giriş yapılmış menü içeriği
                 dropdownMenu.innerHTML = `
-                    <button onclick="alert('Hesap Ayarları yakında eklenecek!')">Hesap Ayarları</button>
+                    <a href="setacc/index.html">Hesap Ayarları</a>
                     <button onclick="logout()">Çıkış Yap</button>
                 `;
             } else {
