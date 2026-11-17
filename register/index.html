@@ -26,7 +26,7 @@
         <form id="registerForm">
             <input type="text" id="username" placeholder="Kullanıcı Adı" required>
             <input type="password" id="password" placeholder="Şifre (En az 6 karakter)" required>
-            <button type="submit">Kayıt Ol</button>
+            <button type="submit" id="submitBtn">Kayıt Ol</button>
             <p id="errorMsg" class="error"></p>
         </form>
         <div class="link">
@@ -35,7 +35,7 @@
         <a href="../index.html" class="back-home">← Ana Sayfaya Dön</a>
     </div>
 
-    <!-- Firebase ve Kayıt Olma Mantığı -->
+    <!-- Firebase ve Kayıt Olma Mantığı (10.12.2 Uyumlu) -->
     <script type="module">
         import { auth, db } from '../firebase-config.js';
         import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -43,6 +43,7 @@
 
         const registerForm = document.getElementById('registerForm');
         const errorMsg = document.getElementById('errorMsg');
+        const submitBtn = document.getElementById('submitBtn');
 
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -50,32 +51,43 @@
             const password = document.getElementById('password').value;
             errorMsg.textContent = "";
 
-            // Yasaklı karakter kontrolü: ()/#@₺*:;!? ve boşluk/özel işaretler engellenir. Sadece harf, rakam, _, -, .
+            // Kullanıcı adı karakter kontrolü (@ ve yasaklı karakterler engellenir)
             const validRegex = /^[a-zA-Z0-9çğıöşüÇĞİÖŞÜ_\-\.]+$/;
             if (!validRegex.test(usernameInput)) {
-                errorMsg.textContent = "Kullanıcı adında boşluk, @, (), /, #, ₺, *, :, ;, !, ?, , ve benzeri özel karakterler kullanılamaz!";
+                errorMsg.textContent = "Kullanıcı adında boşluk, @ ve özel karakterler kullanılamaz!";
                 return;
             }
 
-            // Firebase Authentication için arka planda sahte e-posta adresi üretilir
             const syntheticEmail = usernameInput.toLowerCase() + "@xforum.local";
 
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Kayıt Yapılıyor...";
+
             try {
+                // 1. Firebase Auth ile hesap oluştur
                 const userCredential = await createUserWithEmailAndPassword(auth, syntheticEmail, password);
                 const user = userCredential.user;
 
-                await setDoc(doc(db, "users", user.uid), {
-                    username: usernameInput,
-                    email: syntheticEmail,
-                    createdAt: new Date().toISOString()
-                });
+                // 2. Firestore'a kaydetmeyi dene (Hata verse bile akışı kesmez)
+                try {
+                    await setDoc(doc(db, "users", user.uid), {
+                        username: usernameInput,
+                        email: syntheticEmail,
+                        createdAt: new Date().toISOString()
+                    });
+                } catch (firestoreErr) {
+                    console.warn("Firestore yazma uyarısı:", firestoreErr);
+                }
 
-                alert("Kayıt başarılı! Giriş sayfasına yönlendiriliyorsunuz.");
-                // Giriş sayfasına kullanıcı adı ve şifre otomatik taşınır
+                // 3. Giriş sayfasına kullanıcı adı ve şifreyi otomatik taşıyarak yönlendir
                 window.location.href = `../login/index.html?username=${encodeURIComponent(usernameInput)}&password=${encodeURIComponent(password)}`;
             } catch (error) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Kayıt Ol";
                 if (error.code === 'auth/email-already-in-use') {
                     errorMsg.textContent = "Bu kullanıcı adı zaten alınmış.";
+                } else if (error.code === 'auth/weak-password') {
+                    errorMsg.textContent = "Şifre en az 6 karakter olmalıdır.";
                 } else {
                     errorMsg.textContent = "Hata: " + error.message;
                 }
