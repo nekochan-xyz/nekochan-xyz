@@ -8,20 +8,14 @@
 </head>
 <body>
     <div class="container">
-        <!-- Üst Bilgi ve Navigasyon -->
+        <!-- Üst Bilgi ve Hamburger Menü -->
         <header class="header">
-            <div class="logo">Xforum</div>
-            <div class="user-menu" id="userMenu">
-                <!-- Giriş Yapılmamış Durum -->
-                <div id="authButtons" class="auth-buttons">
-                    <button class="btn btn-outline" onclick="location.href='login/index.html'">Giriş Yap</button>
-                    <button class="btn btn-primary" onclick="location.href='register/index.html'">Kayıt Ol</button>
-                    <button class="btn btn-secondary" onclick="location.href='guestacc/index.html'">Misafir</button>
-                </div>
-                <!-- Giriş Yapılmış Durum -->
-                <div id="accountInfo" class="account-info" style="display: none;">
-                    <span id="usernameDisplay">Kullanıcı</span>
-                    <button class="btn btn-outline btn-sm" onclick="logout()">Çıkış Yap</button>
+            <a href="index.html" class="logo">Xforum</a>
+            <div class="menu-container">
+                <span id="usernameDisplay" style="font-size: 14px; color: #38bdf8; font-weight: 600;"></span>
+                <button class="hamburger-btn" onclick="toggleMenu()">&#9776;</button>
+                <div id="dropdownMenu" class="dropdown-content">
+                    <!-- JavaScript ile dinamik dolacak -->
                 </div>
             </div>
         </header>
@@ -45,11 +39,23 @@
         </section>
     </div>
 
-    <!-- Firebase ve Uygulama Mantığı (10.12.2 Uyumlu) -->
+    <!-- Firebase ve Uygulama Mantığı -->
     <script type="module">
         import { auth, db } from './firebase-config.js';
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { collection, addDoc, getDocs, query, orderBy, getDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        window.toggleMenu = () => {
+            const menu = document.getElementById('dropdownMenu');
+            menu.classList.toggle('show');
+        };
+
+        // Menü dışına tıklandığında kapatma
+        window.addEventListener('click', (e) => {
+            if (!e.target.closest('.menu-container')) {
+                document.getElementById('dropdownMenu').classList.remove('show');
+            }
+        });
 
         window.logout = async () => {
             try {
@@ -61,18 +67,43 @@
             }
         };
 
-        onAuthStateChanged(auth, (user) => {
-            const authButtons = document.getElementById('authButtons');
-            const accountInfo = document.getElementById('accountInfo');
+        onAuthStateChanged(auth, async (user) => {
+            const dropdownMenu = document.getElementById('dropdownMenu');
             const usernameDisplay = document.getElementById('usernameDisplay');
+            dropdownMenu.innerHTML = '';
 
             if (user) {
-                authButtons.style.display = 'none';
-                accountInfo.style.display = 'flex';
-                usernameDisplay.textContent = user.isAnonymous ? "Misafir Kullanıcı" : (user.email || "Kullanıcı");
+                let displayName = "Kullanıcı";
+                if (user.isAnonymous) {
+                    displayName = "Misafir Kullanıcı";
+                } else {
+                    try {
+                        const userDoc = await getDoc(doc(db, "users", user.uid));
+                        if (userDoc.exists() && userDoc.data().username) {
+                            displayName = userDoc.data().username;
+                        } else {
+                            displayName = user.email.split('@')[0];
+                        }
+                    } catch (e) {
+                        displayName = user.email.split('@')[0];
+                    }
+                }
+
+                usernameDisplay.textContent = displayName;
+                
+                // Giriş yapılmış menü içeriği
+                dropdownMenu.innerHTML = `
+                    <button onclick="alert('Hesap Ayarları yakında eklenecek!')">Hesap Ayarları</button>
+                    <button onclick="logout()">Çıkış Yap</button>
+                `;
             } else {
-                authButtons.style.display = 'flex';
-                accountInfo.style.display = 'none';
+                usernameDisplay.textContent = "";
+                // Giriş yapılmamış menü içeriği
+                dropdownMenu.innerHTML = `
+                    <a href="login/index.html">Giriş Yap</a>
+                    <a href="register/index.html">Kayıt Ol</a>
+                    <a href="guestacc/index.html">Misafir</a>
+                `;
             }
         });
 
@@ -87,11 +118,27 @@
                 return;
             }
 
+            let authorName = "Kullanıcı";
+            if (user.isAnonymous) {
+                authorName = "Misafir";
+            } else {
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists() && userDoc.data().username) {
+                        authorName = userDoc.data().username;
+                    } else {
+                        authorName = user.email.split('@')[0];
+                    }
+                } catch (e) {
+                    authorName = user.email.split('@')[0];
+                }
+            }
+
             try {
                 await addDoc(collection(db, "posts"), {
                     title: title,
                     content: content,
-                    author: user.isAnonymous ? "Misafir" : (user.email || "Kullanıcı"),
+                    author: authorName,
                     createdAt: new Date().toISOString()
                 });
                 document.getElementById('postForm').reset();
