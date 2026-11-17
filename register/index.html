@@ -24,7 +24,7 @@
     <div class="container">
         <h2>Kayıt Ol</h2>
         <form id="registerForm">
-            <input type="email" id="email" placeholder="E-posta Adresi" required>
+            <input type="text" id="username" placeholder="Kullanıcı Adı" required>
             <input type="password" id="password" placeholder="Şifre (En az 6 karakter)" required>
             <button type="submit">Kayıt Ol</button>
             <p id="errorMsg" class="error"></p>
@@ -35,7 +35,7 @@
         <a href="../index.html" class="back-home">← Ana Sayfaya Dön</a>
     </div>
 
-    <!-- Firebase ve Kayıt Olma Mantığı (10.12.2 Uyumlu) -->
+    <!-- Firebase ve Kayıt Olma Mantığı -->
     <script type="module">
         import { auth, db } from '../firebase-config.js';
         import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -46,23 +46,39 @@
 
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('email').value;
+            const usernameInput = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             errorMsg.textContent = "";
 
+            // Yasaklı karakter kontrolü: ()/#@₺*:;!? ve boşluk/özel işaretler engellenir. Sadece harf, rakam, _, -, .
+            const validRegex = /^[a-zA-Z0-9çğıöşüÇĞİÖŞÜ_\-\.]+$/;
+            if (!validRegex.test(usernameInput)) {
+                errorMsg.textContent = "Kullanıcı adında boşluk, @, (), /, #, ₺, *, :, ;, !, ?, , ve benzeri özel karakterler kullanılamaz!";
+                return;
+            }
+
+            // Firebase Authentication için arka planda sahte e-posta adresi üretilir
+            const syntheticEmail = usernameInput.toLowerCase() + "@xforum.local";
+
             try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const userCredential = await createUserWithEmailAndPassword(auth, syntheticEmail, password);
                 const user = userCredential.user;
 
                 await setDoc(doc(db, "users", user.uid), {
-                    email: email,
+                    username: usernameInput,
+                    email: syntheticEmail,
                     createdAt: new Date().toISOString()
                 });
 
                 alert("Kayıt başarılı! Giriş sayfasına yönlendiriliyorsunuz.");
-                window.location.href = "../login/index.html";
+                // Giriş sayfasına kullanıcı adı ve şifre otomatik taşınır
+                window.location.href = `../login/index.html?username=${encodeURIComponent(usernameInput)}&password=${encodeURIComponent(password)}`;
             } catch (error) {
-                errorMsg.textContent = "Hata: " + error.message;
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMsg.textContent = "Bu kullanıcı adı zaten alınmış.";
+                } else {
+                    errorMsg.textContent = "Hata: " + error.message;
+                }
             }
         });
     </script>
