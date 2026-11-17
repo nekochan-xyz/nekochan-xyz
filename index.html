@@ -46,6 +46,15 @@
             height: 20px;
             fill: currentColor;
         }
+        .root-badge {
+            background: #dc2626;
+            color: white;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -87,9 +96,10 @@
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { collection, addDoc, getDocs, query, orderBy, getDoc, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        // Görseldeki Material Design tarzı SVG ikonlar
         const PENCIL_SVG = `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
         const TRASH_SVG = `<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4h-3.5z"/></svg>`;
+
+        let isRootUser = false;
 
         window.toggleMenu = () => {
             const menu = document.getElementById('dropdownMenu');
@@ -116,6 +126,7 @@
             const dropdownMenu = document.getElementById('dropdownMenu');
             const usernameDisplay = document.getElementById('usernameDisplay');
             dropdownMenu.innerHTML = '';
+            isRootUser = false;
 
             if (user) {
                 let displayName = "Kullanıcı";
@@ -132,9 +143,16 @@
                     } catch (e) {
                         displayName = user.email.split('@')[0];
                     }
+
+                    // Root kullanıcısı kontrolü (kullanıcı adı "Root" ise veya e-posta "root@xforum.local" ise)
+                    if (displayName === "Root" || user.email === "root@xforum.local") {
+                        isRootUser = true;
+                    }
                 }
 
-                usernameDisplay.textContent = displayName;
+                usernameDisplay.innerHTML = isRootUser 
+                    ? `${escapeHtml(displayName)} <span class="root-badge">ROOT</span>` 
+                    : escapeHtml(displayName);
                 
                 if (user.isAnonymous) {
                     dropdownMenu.innerHTML = `
@@ -257,14 +275,17 @@
                     const postId = docSnap.id;
                     
                     let actionButtonsHtml = '';
-                    // Konu sahibi giriş yapmış kullanıcı ise:
-                    if (currentUser && post.userId === currentUser.uid) {
+                    const isOwner = currentUser && post.userId === currentUser.uid;
+
+                    // Root kullanıcısı ise HER KONUDA hem düzenle hem sil görür
+                    // Normal kullanıcı ise kendi konusunda düzenle + sil görür
+                    // Misafir ise kendi konusunda sadece düzenle görür
+                    if (isRootUser || isOwner) {
                         const safeTitle = escapeHtml(post.title).replace(/'/g, "\\'");
                         const safeContent = escapeHtml(post.content).replace(/'/g, "\\'");
                         
                         const editBtn = `<button class="action-btn" onclick="editPost('${postId}', '${safeTitle}', '${safeContent}')" title="Düzenle">${PENCIL_SVG}</button>`;
-                        // Sadece misafir olmayan (kayıtlı) hesaplara çöp kutusu (silme) ekle
-                        const deleteBtn = !currentUser.isAnonymous 
+                        const deleteBtn = (isRootUser || !currentUser.isAnonymous) 
                             ? `<button class="action-btn delete-btn" onclick="deletePost('${postId}')" title="Sil">${TRASH_SVG}</button>` 
                             : '';
 
