@@ -35,18 +35,14 @@
         <a href="../index.html" class="back-home">← Ana Sayfaya Dön</a>
     </div>
 
-    <!-- Firebase ve Giriş Mantığı (10.12.2 Uyumlu) -->
     <script type="module">
         import { auth } from '../firebase-config.js';
         import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-        // Kayıt sayfasından yönlendirildiyse bilgileri otomatik doldur
+        // Sadece kullanıcı adını URL'den al (şifre asla URL'de olmamalı)
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('username')) {
             document.getElementById('username').value = urlParams.get('username');
-        }
-        if (urlParams.has('password')) {
-            document.getElementById('password').value = urlParams.get('password');
         }
 
         const loginForm = document.getElementById('loginForm');
@@ -58,6 +54,11 @@
             const usernameInput = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             errorMsg.textContent = "";
+
+            if (!usernameInput || !password) {
+                errorMsg.textContent = "Lütfen kullanıcı adı ve şifre girin.";
+                return;
+            }
 
             const syntheticEmail = usernameInput.toLowerCase() + "@xforum.local";
 
