@@ -3,225 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xforum - Root Paneli</title>
-    <link rel="stylesheet" href="../style.css">
+    <title>Root Kontrol - Xforum</title>
     <style>
-        .post-card, .user-card {
-            position: relative;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
             background: #1e293b;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        h2 {
+            text-align: center;
+            color: #38bdf8;
+            margin: 0 0 5px 0;
+            font-size: 20px;
+        }
+        .section {
+            background: #0f172a;
             padding: 15px;
             border-radius: 8px;
             border: 1px solid #334155;
-            margin-bottom: 12px;
-        }
-        .user-card {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
             gap: 10px;
         }
-        .user-info {
-            overflow: hidden;
+        .section h3 {
+            font-size: 15px;
+            color: #e2e8f0;
+            margin: 0 0 5px 0;
         }
-        .user-info h4 {
-            margin: 0 0 4px 0;
-            color: #f8fafc;
-            font-size: 16px;
+        .user-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 12px;
             display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .user-header {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
             gap: 8px;
             flex-wrap: wrap;
         }
-        .user-info p {
-            margin: 0;
+        .user-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #f8fafc;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .user-meta {
             font-size: 12px;
             color: #94a3b8;
             word-break: break-all;
         }
-        .post-actions {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            display: flex;
-            gap: 6px;
-        }
         .user-actions {
             display: flex;
             gap: 6px;
-            flex-shrink: 0;
+            flex-wrap: wrap;
+            margin-top: 4px;
         }
-        .action-btn {
-            background: transparent;
-            border: none;
-            color: #94a3b8;
-            padding: 6px;
+        .btn {
+            padding: 7px 12px;
             border-radius: 6px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.2s, color 0.2s;
+            color: white;
         }
-        .action-btn:hover {
-            background-color: rgba(255, 255, 255, 0.08);
-            color: #f8fafc;
-        }
-        .delete-btn:hover, .ban-btn.active {
-            background-color: rgba(239, 68, 68, 0.15);
-            color: #ef4444;
-        }
-        .unban-btn:hover {
-            background-color: rgba(34, 197, 94, 0.15);
-            color: #22c55e;
-        }
-        .action-btn svg {
-            width: 20px;
-            height: 20px;
-            fill: currentColor;
-        }
+        .btn-blue { background: #0284c7; }
+        .btn-blue:hover { background: #0369a1; }
+        .btn-red { background: #dc2626; }
+        .btn-red:hover { background: #b91c1c; }
+        .btn-green { background: #16a34a; }
+        .btn-green:hover { background: #15803d; }
+        .btn-gray { background: #475569; }
+        .btn-gray:hover { background: #64748b; }
         .root-badge {
             background: #dc2626;
             color: white;
-            font-size: 11px;
-            padding: 2px 6px;
+            font-size: 10px;
+            padding: 2px 5px;
             border-radius: 4px;
-            vertical-align: middle;
         }
         .banned-badge {
             background: #991b1b;
             color: #fecaca;
-            font-size: 11px;
-            padding: 2px 6px;
+            font-size: 10px;
+            padding: 2px 5px;
             border-radius: 4px;
             border: 1px solid #ef4444;
         }
-        .tab-buttons {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .tab-btn {
-            flex: 1;
-            padding: 10px;
-            background: #1e293b;
-            border: 1px solid #334155;
+        .back-home {
+            display: block;
+            text-align: center;
             color: #94a3b8;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
+            text-decoration: none;
+            font-size: 13px;
+            margin-top: 5px;
         }
-        .tab-btn.active {
-            background: #0284c7;
-            border-color: #38bdf8;
-            color: #ffffff;
+        .back-home:hover { color: #f8fafc; }
+        .loading, .empty {
+            text-align: center;
+            color: #94a3b8;
+            padding: 20px 0;
+            font-size: 14px;
+        }
+        .info-text {
+            font-size: 13px;
+            color: #94a3b8;
+            line-height: 1.4;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Üst Bilgi ve Hamburger Menü -->
-        <header class="header">
-            <a href="../index.html" class="logo">Xforum</a>
-            <div class="menu-container">
-                <span id="usernameDisplay" style="font-size: 14px; color: #38bdf8; font-weight: 600;"></span>
-                <button class="hamburger-btn" onclick="toggleMenu()">&#9776;</button>
-                <div id="dropdownMenu" class="dropdown-content">
-                    <!-- JavaScript ile dinamik dolacak -->
-                </div>
+        <h2>Root Kontrol</h2>
+
+        <div class="section">
+            <h3>Kayıtlı Üyeler</h3>
+            <p class="info-text">Kullanıcı adı değiştirme, banlama ve hesap silme işlemlerini buradan yapabilirsiniz.</p>
+            <div id="usersContainer">
+                <p class="loading">Üyeler yükleniyor...</p>
             </div>
-        </header>
-
-        <!-- Sekme Geçişleri -->
-        <div class="tab-buttons">
-            <button id="tabPostsBtn" class="tab-btn active" onclick="switchTab('posts')">Konu Yönetimi</button>
-            <button id="tabUsersBtn" class="tab-btn" onclick="switchTab('users')">Üye Yönetimi</button>
         </div>
 
-        <!-- BÖLÜM 1: KONU YÖNETİMİ -->
-        <div id="postsTabContent">
-            <section class="create-post-section">
-                <h2>Yeni Konu Başlat (Root)</h2>
-                <form id="postForm" onsubmit="createPost(event)">
-                    <input type="text" id="postTitle" placeholder="Konu başlığını buraya yazın..." required>
-                    <textarea id="postContent" placeholder="Ne düşünüyorsun veya sorununu yazın..." rows="4" required></textarea>
-                    <button type="submit" class="btn btn-success">Konuyu Yayınla</button>
-                </form>
-            </section>
-
-            <section class="posts-section">
-                <h2>Tüm Konular</h2>
-                <div id="postsContainer">
-                    <p class="loading-text">Konular yükleniyor...</p>
-                </div>
-            </section>
-        </div>
-
-        <!-- BÖLÜM 2: ÜYE YÖNETİMİ -->
-        <div id="usersTabContent" style="display: none;">
-            <section class="posts-section">
-                <h2>Kayıtlı Üyeler</h2>
-                <div id="usersContainer">
-                    <p class="loading-text">Üyeler yükleniyor...</p>
-                </div>
-            </section>
-        </div>
+        <a href="../index.html" class="back-home">← Ana Sayfaya Dön</a>
     </div>
 
     <script type="module">
         import { auth, db } from '../firebase-config.js';
-        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { collection, addDoc, getDocs, query, orderBy, getDoc, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { collection, getDocs, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         const ROOT_UID = "toemJGBIU9XH7RWZ90SQqjWk0AH3";
-        const PENCIL_SVG = `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
-        const TRASH_SVG = `<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4h-3.5z"/></svg>`;
-        const BAN_SVG = `<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.69L18.31 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/></svg>`;
-        const UNBAN_SVG = `<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`;
-
-        let currentUser = null;
-
-        window.switchTab = (tab) => {
-            const postsContent = document.getElementById('postsTabContent');
-            const usersContent = document.getElementById('usersTabContent');
-            const postsBtn = document.getElementById('tabPostsBtn');
-            const usersBtn = document.getElementById('tabUsersBtn');
-
-            if (tab === 'posts') {
-                postsContent.style.display = 'block';
-                usersContent.style.display = 'none';
-                postsBtn.classList.add('active');
-                usersBtn.classList.remove('active');
-                loadPosts();
-            } else {
-                postsContent.style.display = 'none';
-                usersContent.style.display = 'block';
-                postsBtn.classList.remove('active');
-                usersBtn.classList.add('active');
-                loadUsers();
-            }
-        };
-
-        window.toggleMenu = () => {
-            const menu = document.getElementById('dropdownMenu');
-            menu.classList.toggle('show');
-        };
-
-        window.addEventListener('click', (e) => {
-            if (!e.target.closest('.menu-container')) {
-                document.getElementById('dropdownMenu').classList.remove('show');
-            }
-        });
-
-        window.logout = async () => {
-            try {
-                await signOut(auth);
-                alert("Çıkış yapıldı.");
-                window.location.href = "../index.html";
-            } catch (error) {
-                console.error("Çıkış hatası:", error);
-            }
-        };
 
         onAuthStateChanged(auth, async (user) => {
             if (!user || user.uid !== ROOT_UID) {
@@ -229,229 +167,118 @@
                 window.location.href = "../index.html";
                 return;
             }
-
-            currentUser = user;
-            const dropdownMenu = document.getElementById('dropdownMenu');
-            const usernameDisplay = document.getElementById('usernameDisplay');
-
-            let displayName = "Root";
-            try {
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                if (userDoc.exists() && userDoc.data().username) {
-                    displayName = userDoc.data().username;
-                }
-            } catch (e) {
-                console.warn("Kullanıcı adı okunamadı:", e);
-            }
-
-            usernameDisplay.innerHTML = `${escapeHtml(displayName)} <span class="root-badge">ROOT</span>`;
-            dropdownMenu.innerHTML = `
-                <a href="../index.html">Ana Sayfa</a>
-                <a href="../setacc/index.html">Hesap Ayarları</a>
-                <button onclick="logout()">Çıkış Yap</button>
-            `;
-
-            loadPosts();
+            loadUsers();
         });
 
-        // --- KONU İŞLEMLERİ ---
-        window.createPost = async (e) => {
-            e.preventDefault();
-            if (!currentUser || currentUser.uid !== ROOT_UID) return;
-
-            const title = document.getElementById('postTitle').value.trim();
-            const content = document.getElementById('postContent').value.trim();
-
-            let authorName = "Root";
-            try {
-                const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-                if (userDoc.exists() && userDoc.data().username) {
-                    authorName = userDoc.data().username;
-                }
-            } catch (e) {
-                authorName = "Root";
-            }
-
-            try {
-                await addDoc(collection(db, "posts"), {
-                    title: title,
-                    content: content,
-                    author: authorName,
-                    userId: currentUser.uid,
-                    createdAt: new Date().toISOString()
-                });
-                document.getElementById('postForm').reset();
-                loadPosts();
-            } catch (error) {
-                alert("Hata: " + error.message);
-            }
-        };
-
-        window.deletePost = async (postId) => {
-            if (!confirm("Bu konuyu kalıcı olarak silmek istediğinize emin misiniz?")) return;
-            try {
-                await deleteDoc(doc(db, "posts", postId));
-                loadPosts();
-            } catch (error) {
-                alert("Konu silinemedi: " + error.message);
-            }
-        };
-
-        window.editPost = async (postId, oldTitle, oldContent) => {
-            const newTitle = prompt("Yeni başlığı girin:", oldTitle);
-            if (newTitle === null) return;
-
-            const newContent = prompt("Yeni içeriği girin:", oldContent);
-            if (newContent === null) return;
-
-            if (!newTitle.trim() || !newContent.trim()) {
-                alert("Başlık ve içerik boş bırakılamaz!");
+        window.editUsername = async (userId, currentUsername) => {
+            if (userId === ROOT_UID) {
+                alert("Kendi adınızı Hesap Ayarları'ndan değiştirebilirsiniz.");
                 return;
             }
-
-            try {
-                await updateDoc(doc(db, "posts", postId), {
-                    title: newTitle.trim(),
-                    content: newContent.trim(),
-                    updatedAt: new Date().toISOString()
-                });
-                loadPosts();
-            } catch (error) {
-                alert("Konu güncellenemedi: " + error.message);
-            }
-        };
-
-        async function loadPosts() {
-            const container = document.getElementById('postsContainer');
-            container.innerHTML = "<p class='loading-text'>Konular yükleniyor...</p>";
-
-            try {
-                const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
-                const querySnapshot = await getDocs(q);
-
-                container.innerHTML = "";
-                if (querySnapshot.empty) {
-                    container.innerHTML = "<p class='no-posts'>Henüz hiç konu açılmamış.</p>";
-                    return;
-                }
-
-                querySnapshot.forEach((docSnap) => {
-                    const post = docSnap.data();
-                    const postId = docSnap.id;
-                    const safeTitle = escapeHtml(post.title).replace(/'/g, "\\'");
-                    const safeContent = escapeHtml(post.content).replace(/'/g, "\\'");
-
-                    const postElement = document.createElement('div');
-                    postElement.className = 'post-card';
-                    postElement.innerHTML = `
-                        <div class="post-actions">
-                            <button class="action-btn" onclick="editPost('${postId}', '${safeTitle}', '${safeContent}')" title="Düzenle">${PENCIL_SVG}</button>
-                            <button class="action-btn delete-btn" onclick="deletePost('${postId}')" title="Sil">${TRASH_SVG}</button>
-                        </div>
-                        <h3 style="padding-right: 65px;">${escapeHtml(post.title)}</h3>
-                        <p>${escapeHtml(post.content)}</p>
-                        <div class="post-meta">Yayınlayan: <strong>${escapeHtml(post.author || 'Anonim')}</strong></div>
-                    `;
-                    container.appendChild(postElement);
-                });
-            } catch (error) {
-                container.innerHTML = "<p class='no-posts'>Konular yüklenirken hata oluştu.</p>";
-            }
-        }
-
-        // --- ÜYE YÖNETİMİ İŞLEMLERİ ---
-        window.editUsername = async (userId, currentUsername) => {
-            const newUsername = prompt("Kullanıcının yeni adını girin:", currentUsername);
+            const newUsername = prompt("Yeni kullanıcı adı:", currentUsername);
             if (newUsername === null) return;
-
             const trimmed = newUsername.trim();
             if (!trimmed) {
                 alert("Kullanıcı adı boş olamaz!");
                 return;
             }
-
             try {
-                await updateDoc(doc(db, "users", userId), {
-                    username: trimmed
-                });
+                await updateDoc(doc(db, "users", userId), { username: trimmed });
                 alert("Kullanıcı adı güncellendi.");
                 loadUsers();
             } catch (error) {
-                alert("Kullanıcı adı değiştirilemedi: " + error.message);
+                alert("Hata: " + error.message);
             }
         };
 
-        window.toggleBanUser = async (userId, username, currentlyBanned) => {
+        window.toggleBan = async (userId, username, isBanned) => {
             if (userId === ROOT_UID) {
                 alert("Root hesabını banlayamazsın!");
                 return;
             }
-
-            const actionText = currentlyBanned ? "engelini kaldırmak" : "konu açmasını engellemek (banlamak)";
-            if (!confirm(`"${username}" adlı kullanıcının ${actionText} istediğinize emin misiniz?`)) return;
-
+            const text = isBanned ? "banını kaldırmak" : "banlamak";
+            if (!confirm(`"${username}" kullanıcısını ${text} istediğinize emin misiniz?`)) return;
             try {
-                await updateDoc(doc(db, "users", userId), {
-                    banned: !currentlyBanned
-                });
+                await updateDoc(doc(db, "users", userId), { banned: !isBanned });
                 loadUsers();
             } catch (error) {
-                alert("İşlem başarısız: " + error.message);
+                alert("Hata: " + error.message);
+            }
+        };
+
+        window.deleteUserAccount = async (userId, username) => {
+            if (userId === ROOT_UID) {
+                alert("Root hesabını silemezsin!");
+                return;
+            }
+            if (!confirm(`"${username}" hesabını KALICI olarak silmek istediğinize emin misiniz?\nBu işlem geri alınamaz!`)) return;
+            if (!confirm("Son kez onaylıyor musunuz? Hesap tamamen silinecek.")) return;
+
+            try {
+                // Önce Firestore kaydını sil
+                await deleteDoc(doc(db, "users", userId));
+                alert(`"${username}" hesabı silindi.\nNot: Auth tarafındaki hesap Firebase Console'dan manuel silinmelidir.`);
+                loadUsers();
+            } catch (error) {
+                alert("Hata: " + error.message);
             }
         };
 
         async function loadUsers() {
             const container = document.getElementById('usersContainer');
-            container.innerHTML = "<p class='loading-text'>Üyeler yükleniyor...</p>";
+            container.innerHTML = '<p class="loading">Üyeler yükleniyor...</p>';
 
             try {
-                const querySnapshot = await getDocs(collection(db, "users"));
+                const snap = await getDocs(collection(db, "users"));
                 container.innerHTML = "";
 
-                if (querySnapshot.empty) {
-                    container.innerHTML = "<p class='no-posts'>Henüz kayıtlı üye bulunmuyor.</p>";
+                if (snap.empty) {
+                    container.innerHTML = '<p class="empty">Henüz kayıtlı üye yok.</p>';
                     return;
                 }
 
-                querySnapshot.forEach((docSnap) => {
-                    const userData = docSnap.data();
+                snap.forEach((docSnap) => {
+                    const data = docSnap.data();
                     const uid = docSnap.id;
-                    const username = userData.username || "İsimsiz Kullanıcı";
-                    const email = userData.email || "E-posta yok";
-                    const isBanned = userData.banned === true;
-                    const isTargetRoot = uid === ROOT_UID;
+                    const username = data.username || "İsimsiz";
+                    const email = data.email || "-";
+                    const isBanned = data.banned === true;
+                    const isRoot = uid === ROOT_UID;
+                    const safeName = escapeHtml(username).replace(/'/g, "\\'");
 
-                    const safeUsername = escapeHtml(username).replace(/'/g, "\\'");
-
-                    const badgesHtml = `
-                        ${isTargetRoot ? '<span class="root-badge">ROOT</span>' : ''}
+                    const badges = `
+                        ${isRoot ? '<span class="root-badge">ROOT</span>' : ''}
                         ${isBanned ? '<span class="banned-badge">BANLI</span>' : ''}
                     `;
 
-                    const banBtnHtml = isTargetRoot ? '' : (
-                        isBanned 
-                        ? `<button class="action-btn unban-btn" onclick="toggleBanUser('${uid}', '${safeUsername}', true)" title="Banı Kaldır">${UNBAN_SVG}</button>`
-                        : `<button class="action-btn delete-btn" onclick="toggleBanUser('${uid}', '${safeUsername}', false)" title="Konu Açmayı Engelle (Banla)">${BAN_SVG}</button>`
-                    );
+                    let buttons = '';
+                    if (!isRoot) {
+                        buttons = `
+                            <div class="user-actions">
+                                <button class="btn btn-blue" onclick="editUsername('${uid}', '${safeName}')">Ad Değiştir</button>
+                                <button class="btn ${isBanned ? 'btn-green' : 'btn-gray'}" onclick="toggleBan('${uid}', '${safeName}', ${isBanned})">
+                                    ${isBanned ? 'Banı Kaldır' : 'Banla'}
+                                </button>
+                                <button class="btn btn-red" onclick="deleteUserAccount('${uid}', '${safeName}')">Hesabı Sil</button>
+                            </div>
+                        `;
+                    }
 
-                    const userElement = document.createElement('div');
-                    userElement.className = 'user-card';
-                    userElement.innerHTML = `
-                        <div class="user-info">
-                            <h4>${escapeHtml(username)} ${badgesHtml}</h4>
-                            <p>E-posta: ${escapeHtml(email)}</p>
-                            <p>UID: ${uid}</p>
+                    const card = document.createElement('div');
+                    card.className = 'user-card';
+                    card.innerHTML = `
+                        <div class="user-header">
+                            <div class="user-name">${escapeHtml(username)} ${badges}</div>
                         </div>
-                        <div class="user-actions">
-                            <button class="action-btn" onclick="editUsername('${uid}', '${safeUsername}')" title="Kullanıcı Adını Değiştir">${PENCIL_SVG}</button>
-                            ${banBtnHtml}
-                        </div>
+                        <div class="user-meta">E-posta: ${escapeHtml(email)}</div>
+                        <div class="user-meta">UID: ${uid}</div>
+                        ${buttons}
                     `;
-                    container.appendChild(userElement);
+                    container.appendChild(card);
                 });
             } catch (error) {
-                console.error("Üyeler yüklenirken hata:", error);
-                container.innerHTML = "<p class='no-posts'>Üyeler yüklenemedi: " + error.message + "</p>";
+                console.error(error);
+                container.innerHTML = '<p class="empty">Üyeler yüklenemedi.</p>';
             }
         }
 
@@ -462,5 +289,4 @@
         }
     </script>
 </body>
-  </html>
-  
+</html>
