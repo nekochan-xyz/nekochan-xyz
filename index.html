@@ -96,7 +96,7 @@
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { collection, addDoc, getDocs, query, orderBy, getDoc, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        const ROOT_UID = "xfWiKbssLzWUHJMINIIrEjVvLja2";
+        const ROOT_UID = "XfWiKbssLzWUHJMINIIrEjVvLja2";
         const PENCIL_SVG = `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
         const TRASH_SVG = `<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4h-3.5z"/></svg>`;
 
@@ -145,7 +145,6 @@
                         displayName = user.email.split('@')[0];
                     }
 
-                    // Sadece gerçek Root UID'si eşleşirse Root yetkisi ver
                     if (user.uid === ROOT_UID) {
                         isRootUser = true;
                     }
@@ -160,7 +159,9 @@
                         <button onclick="logout()">Çıkış Yap</button>
                     `;
                 } else {
+                    const rootMenuLink = isRootUser ? `<a href="asd/index.html">Root Paneli</a>` : '';
                     dropdownMenu.innerHTML = `
+                        ${rootMenuLink}
                         <a href="setacc/index.html">Hesap Ayarları</a>
                         <button onclick="logout()">Çıkış Yap</button>
                     `;
@@ -193,8 +194,16 @@
             } else {
                 try {
                     const userDoc = await getDoc(doc(db, "users", user.uid));
-                    if (userDoc.exists() && userDoc.data().username) {
-                        authorName = userDoc.data().username;
+                    if (userDoc.exists()) {
+                        if (userDoc.data().banned === true) {
+                            alert("Hesabınız yönetici tarafından engellendiği için yeni konu açamazsınız.");
+                            return;
+                        }
+                        if (userDoc.data().username) {
+                            authorName = userDoc.data().username;
+                        } else {
+                            authorName = user.email.split('@')[0];
+                        }
                     } else {
                         authorName = user.email.split('@')[0];
                     }
@@ -215,7 +224,7 @@
                 loadPosts();
             } catch (error) {
                 console.error("Konu eklenirken hata oluştu:", error);
-                alert("Hata: " + error.message);
+                alert("Hata: Konu yayınlama izniniz yok veya bir hata oluştu.");
             }
         };
 
