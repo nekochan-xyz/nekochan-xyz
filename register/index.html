@@ -35,7 +35,6 @@
         <a href="../index.html" class="back-home">← Ana Sayfaya Dön</a>
     </div>
 
-    <!-- Firebase ve Kayıt Olma Mantığı (10.12.2 Uyumlu) -->
     <script type="module">
         import { auth, db } from '../firebase-config.js';
         import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -51,10 +50,15 @@
             const password = document.getElementById('password').value;
             errorMsg.textContent = "";
 
-            // Kullanıcı adı karakter kontrolü (@ ve yasaklı karakterler engellenir)
+            // Kullanıcı adı karakter kontrolü
             const validRegex = /^[a-zA-Z0-9çğıöşüÇĞİÖŞÜ_\-\.]+$/;
             if (!validRegex.test(usernameInput)) {
                 errorMsg.textContent = "Kullanıcı adında boşluk, @ ve özel karakterler kullanılamaz!";
+                return;
+            }
+
+            if (password.length < 6) {
+                errorMsg.textContent = "Şifre en az 6 karakter olmalıdır.";
                 return;
             }
 
@@ -64,23 +68,24 @@
             submitBtn.textContent = "Kayıt Yapılıyor...";
 
             try {
-                // 1. Firebase Auth ile hesap oluştur
+                // 1. Firebase Auth ile hesap oluştur (kullanıcı otomatik giriş yapmış olur)
                 const userCredential = await createUserWithEmailAndPassword(auth, syntheticEmail, password);
                 const user = userCredential.user;
 
-                // 2. Firestore'a kaydetmeyi dene (Hata verse bile akışı kesmez)
+                // 2. Firestore'a kullanıcı bilgilerini kaydet
                 try {
                     await setDoc(doc(db, "users", user.uid), {
                         username: usernameInput,
                         email: syntheticEmail,
-                        createdAt: new Date().toISOString()
+                        createdAt: new Date().toISOString(),
+                        banned: false
                     });
                 } catch (firestoreErr) {
                     console.warn("Firestore yazma uyarısı:", firestoreErr);
                 }
 
-                // 3. Giriş sayfasına kullanıcı adı ve şifreyi otomatik taşıyarak yönlendir
-                window.location.href = `../login/index.html?username=${encodeURIComponent(usernameInput)}&password=${encodeURIComponent(password)}`;
+                // 3. Şifre URL'ye konmadan direkt ana sayfaya yönlendir
+                window.location.href = "../index.html";
             } catch (error) {
                 submitBtn.disabled = false;
                 submitBtn.textContent = "Kayıt Ol";
