@@ -25,16 +25,13 @@
   </style>
 </head>
 <body>
-
   <div class="guest-card">
     <h2 style="margin-bottom:10px; color: #38bdf8;">Anonim Misafir Girişi</h2>
     <p style="color:#94a3b8; font-size:0.9rem; margin-bottom:20px;">
-      Kayıt olmadan geçici bir misafir hesabıyla foruma katılabilir ve konu paylaşabilirsiniz.
+      Kayıt olmadan forumu gezebilirsiniz. Misafir hesaplarla konu açılamaz.
     </p>
-
-    <div id="errorBox" class="error" style="margin-bottom: 10px;"></div>
+    <div id="errorBox" style="margin-bottom: 10px; color: #ef4444;"></div>
     <button id="guestBtn" class="btn btn-primary" style="width:100%; padding: 12px;">Anonim Olarak Devam Et</button>
-
     <div style="margin-top:16px; font-size:0.9rem; color:#94a3b8;">
       Kalıcı hesap için <a href="../register/index.html" style="color:#38bdf8; text-decoration:none;">Kayıt Ol</a>
     </div>
@@ -51,7 +48,6 @@
       const btn = document.getElementById("guestBtn");
       const errorBox = document.getElementById("errorBox");
       errorBox.innerText = "";
-
       btn.disabled = true;
       btn.innerText = "Bağlanılıyor...";
 
