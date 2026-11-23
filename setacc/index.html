@@ -47,7 +47,7 @@
         <!-- Şifre Değiştirme -->
         <div class="section">
             <h3>Şifre Değiştir</h3>
-            <input type="password" id="currentPassword" placeholder="Varsayılan (Mevcut) Şifre">
+            <input type="password" id="currentPassword" placeholder="Mevcut Şifre">
             <input type="password" id="newPassword" placeholder="Yeni Şifre">
             <input type="password" id="confirmNewPassword" placeholder="Yeni Şifre (Tekrar)">
             <button onclick="changePassword()">Şifreyi Değiştir</button>
@@ -87,11 +87,9 @@
 
             currentUser = user;
             
-            // Hesap oluşturulma tarihi
             const creationTime = user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleString('tr-TR') : "Bilinmiyor";
             document.getElementById('accountCreated').textContent = creationTime;
 
-            // Kullanıcı adı
             activeUsername = user.email ? user.email.split('@')[0] : "Kullanıcı";
             try {
                 const userDoc = await getDoc(doc(db, "users", user.uid));
@@ -105,7 +103,6 @@
             document.getElementById('newUsername').value = activeUsername;
         });
 
-        // Kullanıcı Adı Değiştir (Firestore Tabanlı ve Çakışma Kontrollü)
         window.changeUsername = async () => {
             const msgEl = document.getElementById('usernameMsg');
             msgEl.textContent = "";
@@ -127,7 +124,6 @@
             }
 
             try {
-                // 1. Kullanıcı adı daha önce alınmış mı kontrol et
                 const q = query(collection(db, "users"), where("username", "==", newName));
                 const querySnapshot = await getDocs(q);
                 
@@ -137,7 +133,6 @@
                     return;
                 }
 
-                // 2. Firestore'daki kullanıcı adını güncelle
                 await setDoc(doc(db, "users", currentUser.uid), {
                     username: newName,
                     email: currentUser.email,
@@ -155,7 +150,6 @@
             }
         };
 
-        // Şifre Değiştir
         window.changePassword = async () => {
             const msgEl = document.getElementById('passwordMsg');
             msgEl.textContent = "";
@@ -184,9 +178,7 @@
             }
 
             try {
-                // Mevcut şifre ile doğrula
                 await signInWithEmailAndPassword(auth, currentUser.email, currentPass);
-                // Şifreyi güncelle
                 await updatePassword(currentUser, newPass);
 
                 msgEl.textContent = "Şifre başarıyla değiştirildi!";
@@ -196,7 +188,7 @@
                 document.getElementById('confirmNewPassword').value = "";
             } catch (error) {
                 if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-                    msgEl.textContent = "Varsayılan (mevcut) şifre hatalı!";
+                    msgEl.textContent = "Mevcut şifre hatalı!";
                 } else {
                     msgEl.textContent = "Hata: " + error.message;
                 }
@@ -204,7 +196,6 @@
             }
         };
 
-        // Hesabı Sil
         window.deleteAccount = async () => {
             const msgEl = document.getElementById('deleteMsg');
             msgEl.textContent = "";
@@ -222,7 +213,6 @@
             }
 
             try {
-                // Şifre ile doğrula
                 await signInWithEmailAndPassword(auth, currentUser.email, password);
                 
                 try {
